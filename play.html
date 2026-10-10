@@ -431,7 +431,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
         <button class="btn" id="b-shop" data-t="shop"></button>
       </div>
       <button class="btn ghost" id="b-settings" data-t="settings"></button>
-      <a class="btn" id="b-gplay" href="https://play.google.com/store/apps/details?id=com.brainoxystudio.branoxy&referrer=utm_source%3Dweb_demo%26utm_medium%3Dgithub" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px;border-color:#6be6c1;color:#6be6c1"></a>
+      <a class="btn" id="b-gplay" href="https://play.google.com/store/apps/details?id=com.brainoxystudio.branoxy&referrer=utm_source%3Dweb_demo" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px;border-color:#6be6c1;color:#6be6c1"></a>
       <div id="banner" style="display:none"></div>
     </div>
   </section>
@@ -2676,6 +2676,8 @@ const Solver = {
              geste du joueur (règle des navigateurs) — d'où
              ensure(), appelée au premier contact avec l'écran.
    ============================================================ */
+/* Main 👆 du geste d'accueil (niveau 1, première ouverture). */
+const MAIN_ACCUEIL = (typeof Image !== "undefined") ? Object.assign(new Image(), { src: "data:image/png;base64,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" }) : null;
 const Audio_ = {
   ctx:null, musicTimer:null, step:0,
   ensure(){
@@ -2996,7 +2998,7 @@ const BOUTIQUE_OUVERTE = true;
 const PUB_TEST = false;
 /* DÉMO WEB (fabienb3.github.io/play) : 20 niveaux, puis renvoi vers Google Play. */
 const DEMO_WEB = true, DEMO_MAX = 20;
-const DEMO_LIEN = "https://play.google.com/store/apps/details?id=com.brainoxystudio.branoxy&referrer=utm_source%3Dweb_demo%26utm_medium%3Dgithub";
+const DEMO_LIEN = "https://play.google.com/store/apps/details?id=com.brainoxystudio.branoxy&referrer=utm_source%3Dweb_demo";
 const DEMO_TXT = {
   fr:{ home:"▶ Jeu complet gratuit sur Google Play", titre:"Fin de la démo 🎉", msg:"Bravo ! Vous avez terminé les 20 niveaux de la démo.\n\nLe jeu complet est gratuit sur Google Play : 150 niveaux et tout le ciel étoilé à révéler.", go:"Continuer sur Google Play", non:"Plus tard" },
   en:{ home:"▶ Full game free on Google Play", titre:"End of the demo 🎉", msg:"Well done! You finished the 20 demo levels.\n\nThe full game is free on Google Play: 150 levels and a whole starry sky to reveal.", go:"Continue on Google Play", non:"Later" },
@@ -3307,12 +3309,17 @@ const MonetizationManager = {
     const fin = ()=>{
       if (fini) return; fini = true; clearTimeout(garde);
       this.retirer(registre);
+      Audio_.resume();      // la musique reprend après la pub (si le joueur l'a laissée active)
       this.preparerInterstitiel();
       after();
     };
     const garde = setTimeout(fin, this.DELAI_SECURITE_MS);
     this.ecouter(a, "interstitialAdDismissed",    fin, registre, ()=>fini);
     this.ecouter(a, "interstitialAdFailedToShow", fin, registre, ()=>fini);
+    /* Signalé par Fabien le 10 oct. : la musique de Branoxy continuait
+       sous le son de la pub et les deux se mélangeaient. On coupe le son
+       du jeu pendant toute l'annonce. */
+    Audio_.suspend();
     Promise.resolve(a.showInterstitial()).catch(fin);
   },
 
@@ -3356,6 +3363,7 @@ const MonetizationManager = {
       if (fini) return; fini = true; clearTimeout(garde);
       this.retirer(registre);
       GameManager.degeler();
+      Audio_.resume();
       this.preparerRecompense();
       if (echec){ UIManager.message(T("ad_unavailable")); onReward(); }
       else if (gagne) onReward();
@@ -3365,6 +3373,7 @@ const MonetizationManager = {
     this.ecouter(a, "onRewardedVideoAdReward",       ()=>{ gagne = true; }, registre, ()=>fini);
     this.ecouter(a, "onRewardedVideoAdDismissed",    fin, registre, ()=>fini);
     this.ecouter(a, "onRewardedVideoAdFailedToShow", ()=>{ echec = true; fin(); }, registre, ()=>fini);
+    Audio_.suspend();     // même correctif que l'interstitiel : pas de musique sous la pub
     Promise.resolve(a.showRewardVideoAd())
       .then(r=>{ if (r && (r.amount > 0 || r.type)) gagne = true; })
       .catch(()=>{ echec = true; fin(); });
@@ -5975,31 +5984,65 @@ const Renderer = {
         this.gesteAccueil = null;
       } else {
         const dt = performance.now() - g.debut;
-        const PERIODE = 1900;
+        const PERIODE = 2100;
         const boucle = (dt % PERIODE) / PERIODE;
         /* Trois boucles puis silence : au-delà, une animation qui ne
            s'arrête jamais devient un tic agaçant plutôt qu'une aide. */
         if (dt < PERIODE * 3){
-          const phase = (Math.sin(boucle * 2*Math.PI - Math.PI/2) + 1) / 2;
+          /* Mouvement VERS LE HAUT (Fabien, 10 oct.) : la main part de la
+             pièce et monte jusqu'au bord du plateau, puis s'efface et
+             recommence. Elle dit « glisse ta pièce vers le plateau » sans
+             désigner de case précise : elle s'arrête juste à l'entrée de
+             la grille, jamais sur l'emplacement de la solution. */
           const tc = this.tray.cell;
-          const cx = sl.x + (p.cells[0].c + 1.1) * tc + phase * tc * 1.35;
-          const cy = sl.y + (p.cells[0].r + 1.1) * tc + phase * tc * 0.75;
-          const bord = Math.min(1, dt/280) * Math.min(1, (PERIODE*3 - dt)/280);
-          const r = tc * 0.34;
+          const cx = sl.x + (p.cells[0].c + 0.6) * tc;
+          const y0 = sl.y + (p.cells[0].r + 0.6) * tc;
+          const L = GameManager.level;
+          const yHaut = L ? this.board.oy + L.rows * this.board.cell - this.board.cell * 0.55 : y0 - tc * 3;
+          const t = Math.min(1, boucle / 0.72);
+          const phase = t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;   // départ et arrivée en douceur
+          const cy = y0 + (Math.min(yHaut, y0) - y0) * phase;
+          const visible = Math.min(1, boucle / 0.08) * (boucle > 0.78 ? Math.max(0, 1 - (boucle - 0.78) / 0.18) : 1);
+          const bord = visible * Math.min(1, dt/280) * Math.min(1, (PERIODE*3 - dt)/280);
+          /* MAIN 👆 (demande de Fabien, 10 oct.) : le disque blanc seul
+             ne se lisait pas comme « mets ton doigt ici ». On garde une
+             petite onde de contact sous le bout de l'index, et on dessine
+             la main (emoji Noto, licence OFL) qui pend sous ce point,
+             exactement comme dans les Shorts. Repli : si l'image n'est
+             pas encore décodée, l'ancien disque reste affiché. */
+          const r = tc * 0.22;
+          const img = MAIN_ACCUEIL;
+          /* PIÈCE FANTÔME (Fabien, 10 oct.) : une copie translucide de la
+             pièce monte avec la main, en grandissant jusqu'à la taille des
+             cases du plateau, comme une vraie pièce tenue au doigt. La
+             vraie pièce reste dans la réserve. Orientation de la réserve
+             conservée : le fantôme ne révèle jamais le sens de pose. */
+          if (bord > 0.01){
+            const bc = this.board.cell;
+            const k = tc + (bc - tc) * phase;
+            const ox = cx - (p.cells[0].c + 0.6) * k, oy = cy - (p.cells[0].r + 0.6) * k;
+            this.piece(p.cells, ox, oy, k, p.color, { lift: phase > 0.02, sharp:true, alpha: bord * 0.62 });
+          }
           ctx.save();
-          for (let h = r*1.7; h > r*0.85; h -= 2){
-            const a = bord * 0.30 * (1 - (h - r*0.85)/(r*0.85));
+          const onde = 0.5 + 0.5 * Math.sin(dt / 190);
+          for (let h = r*(1.6 + onde*0.5); h > r*0.6; h -= 2){
+            const a = bord * 0.22 * (1 - (h - r*0.6)/(r*1.4));
             if (a <= 0) continue;
             ctx.beginPath(); ctx.arc(cx, cy, h, 0, Math.PI*2);
             ctx.fillStyle = `rgba(255,255,255,${a})`;
             ctx.fill();
           }
-          ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(255,255,255,${bord*0.90})`;
-          ctx.fill();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = `rgba(255,255,255,${bord})`;
-          ctx.stroke();
+          if (img && img.complete && img.naturalWidth){
+            const H = tc * 1.9, k = H / img.naturalHeight;
+            ctx.globalAlpha = bord;
+            ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = tc * 0.35; ctx.shadowOffsetY = tc * 0.12;
+            /* bout de l'index : (39, 0) dans l'image */
+            ctx.drawImage(img, cx - 39 * k, cy - 2 * k, img.naturalWidth * k, H);
+          } else {
+            ctx.beginPath(); ctx.arc(cx, cy, tc*0.34, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(255,255,255,${bord*0.90})`;
+            ctx.fill();
+          }
           ctx.restore();
         } else {
           this.gesteAccueil = null;
