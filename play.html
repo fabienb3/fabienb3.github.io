@@ -8651,6 +8651,10 @@ const InputManager = {
     cv.addEventListener("pointermove", e => this.onMove(e));
     cv.addEventListener("pointerup",   e => this.onUp(e));
     cv.addEventListener("pointercancel", ()=> this.cancel());
+    /* 1.68 : le navigateur a repris le doigt sans prévenir (plein écran, geste
+       système…) : sans ce garde-fou, le jeu croyait un doigt encore posé et
+       ignorait tous les touchers suivants (« pièce figée », Fabien sur itch). */
+    cv.addEventListener("lostpointercapture", e => { if (e.pointerId === this.pointerId) this.cancel(); });
   },
 
   pos(e){
@@ -8697,7 +8701,12 @@ const InputManager = {
        geste en cours : la pièce tenue restait en l'air et le glisser
        partait sur une autre. Les doigts suivants sont ignorés jusqu'à
        ce que le premier ait relâché. */
-    if (this.pointerId !== null && this.pointerId !== undefined) return;
+    if (this.pointerId !== null && this.pointerId !== undefined){
+      if (!e.isPrimary) return;
+      /* Un NOUVEAU premier doigt veut dire qu'aucun autre n'est posé : le
+         doigt mémorisé est un fantôme (relâcher perdu). On l'oublie. */
+      this.cancel();
+    }
     Audio_.ensure();
     const { x, y } = this.pos(e);
     const h = this.hit(x, y);
