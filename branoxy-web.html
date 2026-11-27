@@ -100,7 +100,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 }
 .tagline{
   text-align:center;color:var(--dim);font-size:11px;letter-spacing:.3em;
-  text-transform:uppercase;margin:9px 0 0;
+  text-transform:uppercase;margin:9px 0 0;text-wrap:balance;
 }
 #hero{width:100%;max-width:256px;aspect-ratio:1;margin:2px auto 0;display:block}
 /* 1.64 : le bouton du Puzzle du jour ajoute ~80 px à l'accueil. Sur un écran court (360×640),
@@ -536,6 +536,73 @@ html:lang(ko) .btn{word-break:keep-all}
   .btn.primary{ padding:12px; font-size:15px; }
   .btn{ padding:10px 14px; }
 }
+
+/* 1.84 — Avent étoilé */
+#ov-avent{position:fixed;inset:0;z-index:80;display:none;background:#03060C;touch-action:none}
+#ov-avent.on{display:block}
+#av-cv{position:absolute;left:0;top:0}
+#av-x{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:10px;z-index:2;background:rgba(10,16,30,.6)}
+#av-go{box-shadow:0 0 22px rgba(255,200,110,.45);background:linear-gradient(90deg,#FFD98E,#F2A23C);color:#1A1206;border:0;font-weight:700;border-radius:14px}
+.av-porte{position:absolute;right:7px;top:calc(50% - 3px);transform:translateY(-50%);width:50px;height:50px;padding:0;border-radius:50%;z-index:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(circle at 50% 32%,#2B3F70 0%,#0E1730 62%,#060A15 100%);border:1.5px solid rgba(255,217,142,.8);color:#FFD98E;
+  box-shadow:0 0 12px rgba(255,200,110,.30),inset 0 0 10px rgba(255,217,142,.15);font-family:ui-monospace,Menlo,Consolas,monospace}
+.av-porte .av-et{font-size:19px;text-shadow:0 0 8px rgba(255,214,140,.95)}
+.av-porte .av-n{font-size:10px;font-weight:700;margin-top:2px;letter-spacing:.02em}
+.av-porte.av-attend{animation:av-pulse 2.4s ease-in-out infinite}
+@keyframes av-pulse{0%,100%{box-shadow:0 0 10px rgba(255,200,110,.25),inset 0 0 10px rgba(255,217,142,.12)}50%{box-shadow:0 0 22px rgba(255,200,110,.75),inset 0 0 14px rgba(255,217,142,.30)}}
+.av-porte:active{transform:translateY(-50%) scale(.93)}
+@media (max-width:340px){ .av-porte{width:44px;height:44px;right:5px} }
+html.ordi #av-x{zoom:var(--z,1)}
+#av-go .av-go-t{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+#av-go.av-calme{background:rgba(255,217,142,.10);color:#FFD98E;box-shadow:none;border:1px solid rgba(255,217,142,.35)}
+</style>
+<style>
+/* 1.84 — écran d'ordinateur : l'interface suit la taille de l'écran (classe posée par le script ci-dessous). */
+html.ordi .topbar, html.ordi .gamebar, html.ordi .wordmark, html.ordi .tagline, html.ordi .homectl > *,
+html.ordi #win-pop, html.ordi .overlay .card, html.ordi #ov-pause .pausecard,
+html.ordi #s-levels > *, html.ordi #s-settings > *, html.ordi #s-shop > *,
+html.ordi #sky-hint, html.ordi #sky-save-row,
+html.ordi .sc-tete, html.ordi .sc-texte, html.ordi .sc-x, html.ordi .sc-fl,
+html.ordi .sc-cer-titre, html.ordi #cer-ok, html.ordi #cer-ecrin { zoom: var(--z, 1); }
+/* Relecture : une hauteur en vh DANS un élément zoomé est multipliée par le zoom → on la divise. */
+html.ordi .langcard{ max-height:calc(82vh / var(--z, 1)); }
+/* Relecture : l'espacement des lettres laisse un blanc après la dernière : on le compense (comme .wordmark). */
+html.ordi .tagline{ padding-left:.3em; }
+html.ordi #s-home.on{ flex-direction:row; align-items:center; justify-content:center; gap:6vw; }
+html.ordi .homebrand{ flex:0 0 auto; align-items:center; width:calc(340px * var(--z, 1)); max-width:44vw; }
+html.ordi .homectl{ flex:0 0 auto; width:calc(340px * var(--z, 1)); max-width:44vw; margin:0 !important; gap:calc(12px * var(--z, 1)); justify-content:center; }
+html.ordi #hero{ width:min(46vh, 100%); max-width:none; }
+html.ordi .gamebar{ max-width:560px; margin-left:auto; margin-right:auto; width:100%; }
+html.ordi #s-levels > *, html.ordi #s-settings > *, html.ordi #s-shop > *{ width:100%; max-width:640px; margin-left:auto; margin-right:auto; }
+</style>
+<script>
+/* 1.84 — échelle « ordinateur ». Inscrit AVANT tout le reste : ce « resize » passe donc
+   avant celui du moteur, qui relit window.__zOrdi pour la taille des cases. */
+(function(){
+  function maj(){
+    var w = innerWidth, h = innerHeight, z = Math.min(h / 600, w / 1000);
+    /* Relecture : sur tablette, le clavier qui monte ne change que la HAUTEUR → on garde l'échelle
+       (sinon toute l'interface change de taille sous le doigt pendant la saisie). */
+    var a = document.activeElement;
+    if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && w === maj.w) return;
+    maj.w = w;
+    var on = w >= 900 && w >= h * 1.2 && z > 1.05;
+    var d = document.documentElement;
+    d.classList.toggle("ordi", on);
+    d.style.setProperty("--z", on ? z.toFixed(3) : "1");
+    window.__zOrdi = on ? z : 1;
+  }
+  maj(); addEventListener("resize", maj);
+})();
+</script>
+<style>
+/* 1.84 — boutons de zoom du Ciel : seulement avec une souris (un téléphone a le pincement). */
+#sky-zoom{ position:absolute; right:12px; bottom:12px; display:none; flex-direction:column; gap:8px; z-index:3; }
+#sky-zoom .iconbtn{ font-size:22px; background:rgba(10,16,22,.78); min-width:44px; min-height:44px; }
+#sky-zoom .iconbtn:disabled{ opacity:.35; cursor:default; }
+@media (hover:hover) and (pointer:fine){ #sky-zoom{ display:flex; } }
+html.ordi #sky-zoom{ zoom: var(--z, 1); }
 </style>
 <style>
 @media (min-width:700px){ .homectl{max-width:440px;width:100%;margin-left:auto;margin-right:auto} }
@@ -646,7 +713,7 @@ html:lang(ko) .btn{word-break:keep-all}
       <div class="title"><b data-t="sky"></b><span id="sky-count"></span></div>
       <div style="width:44px"></div>
     </div>
-    <div id="sky-stage"><canvas id="sky-canvas"></canvas></div>
+    <div id="sky-stage"><canvas id="sky-canvas"></canvas><div id="sky-zoom"><button class="iconbtn" id="sky-zin" data-tl="sky_zin">+</button><button class="iconbtn" id="sky-zout" data-tl="sky_zout">−</button><button class="iconbtn" id="sky-zfit" data-tl="sky_zfit">⤢</button></div></div>
     <p class="note" id="sky-hint" data-t="sky_hint"></p>
 
     <!-- flex-wrap est indispensable : avec justify-content:center et sans
@@ -843,8 +910,8 @@ const I18N = {
       progress:"%n niveaux résolus · %d diamants",
       play_progress:"Niveau %n · %p pts · %d ◆",
       t_beyond:"Au-delà",
-      sky:"Ciel", sky_count:"%s étoile allumée|%s étoiles allumées", sky_hint:"Un doigt pour vous déplacer, deux pour agrandir.",
-      sky_solved:"%n niveaux résolus",
+      sky:"Ciel", sky_count:"%s étoile allumée|%s étoiles allumées", sky_hint:"Un doigt pour vous déplacer, deux pour agrandir.", sky_hint_souris:"Molette ou double-clic pour agrandir, glissez pour vous déplacer.", sky_zin:"Agrandir", sky_zout:"Réduire", sky_zfit:"Ciel entier",
+      sky_solved:"%n niveaux résolus", sky_solved1:"1 niveau résolu",
       sky_empty:"Rien encore. Résolvez un niveau pour allumer votre première étoile.",
       sky_complete:"Ciel complet", csn_uma:"Grande Ourse complète", csn_cas:"Cassiopée complète", csn_ori:"Orion complet", csn_cru:"Croix du Sud complète",csn_sys:"Système solaire complet", csn_cnc:"Cancer complet", csn_vir:"Vierge complète", csn_and:"Andromède complète", csn_cep:"Céphée complet", csn_dra:"Dragon complet", csn_her:"Hercule complet", csn_aur:"Cocher complet", csn_del:"Petit Renard complet", csn_sge:"Flèche complète", csn_psa:"Poisson Austral complet", csn_cap:"Capricorne complet", csn_aqr:"Verseau complet", csn_lib:"Balance complète", csn_oph:"Ophiuchus complet", csn_per:"Persée complet", csn_cma:"Grand Chien complet", csn_lyr:"Lyre complète", csn_aql:"Aigle complet", csn_peg:"Pégase complet", csn_crb:"Couronne boréale complète", csn_boo:"Bouvier complet", csn_umi:"Petite Ourse complète", csn_leo:"Lion complet", csn_cyg:"Cygne complet", csn_sco:"Scorpion complet", csn_gem:"Gémeaux complets", csn_tau:"Taureau complet", csn_sgr:"Sagittaire complet",
       quit_saved:"Progression enregistrée",
@@ -893,8 +960,8 @@ const I18N = {
       progress:"%n levels solved · %d diamonds",
       play_progress:"Level %n · %p pts · %d ◆",
       t_beyond:"Beyond",
-      sky:"Sky", sky_count:"%s star lit|%s stars lit", sky_hint:"One finger to move, two to zoom in.",
-      sky_solved:"%n levels solved",
+      sky:"Sky", sky_count:"%s star lit|%s stars lit", sky_hint:"One finger to move, two to zoom in.", sky_hint_souris:"Scroll or double-click to zoom, drag to move around.", sky_zin:"Zoom in", sky_zout:"Zoom out", sky_zfit:"Whole sky",
+      sky_solved:"%n levels solved", sky_solved1:"1 level solved",
       sky_empty:"Nothing yet. Solve a level to light your first star.",
       sky_complete:"Sky complete", csn_uma:"Ursa Major complete", csn_cas:"Cassiopeia complete", csn_ori:"Orion complete", csn_cru:"Southern Cross complete",csn_sys:"Solar system complete", csn_cnc:"Cancer complete", csn_vir:"Virgo complete", csn_and:"Andromeda complete", csn_cep:"Cepheus complete", csn_dra:"Draco complete", csn_her:"Hercules complete", csn_aur:"Auriga complete", csn_del:"Delphinus complete", csn_sge:"Sagitta complete", csn_psa:"Piscis Austrinus complete", csn_cap:"Capricornus complete", csn_aqr:"Aquarius complete", csn_lib:"Libra complete", csn_oph:"Ophiuchus complete", csn_per:"Perseus complete", csn_cma:"Canis Major complete", csn_lyr:"Lyra complete", csn_aql:"Aquila complete", csn_peg:"Pegasus complete", csn_crb:"Corona Borealis complete", csn_boo:"Boötes complete", csn_umi:"Ursa Minor complete", csn_leo:"Leo complete", csn_cyg:"Cygnus complete", csn_sco:"Scorpius complete", csn_gem:"Gemini complete", csn_tau:"Taurus complete", csn_sgr:"Sagittarius complete",
       quit_saved:"Progress saved",
@@ -942,8 +1009,8 @@ const I18N = {
       progress:"%n niveles resueltos · %d diamantes",
       play_progress:"Nivel %n · %p pts · %d ◆",
       t_beyond:"Más allá",
-      sky:"Cielo", sky_count:"%s estrella encendida|%s estrellas encendidas", sky_hint:"Un dedo para moverte, dos para ampliar.",
-      sky_solved:"%n niveles resueltos",
+      sky:"Cielo", sky_count:"%s estrella encendida|%s estrellas encendidas", sky_hint:"Un dedo para moverte, dos para ampliar.", sky_hint_souris:"Rueda o doble clic para ampliar, arrastra para moverte.", sky_zin:"Ampliar", sky_zout:"Reducir", sky_zfit:"Cielo entero",
+      sky_solved:"%n niveles resueltos", sky_solved1:"1 nivel resuelto",
       sky_empty:"Nada todavía. Resuelve un nivel para encender tu primera estrella.",
       sky_complete:"Cielo completo", csn_uma:"Osa Mayor completa", csn_cas:"Casiopea completa", csn_ori:"Orión completo", csn_cru:"Cruz del Sur completa", csn_sys:"Sistema solar completo", csn_cnc:"Cáncer completo", csn_vir:"Virgo completo", csn_and:"Andrómeda completa", csn_cep:"Cefeo completo", csn_dra:"Dragón completo", csn_her:"Hércules completo", csn_aur:"Cochero completo", csn_del:"Delfín completo", csn_sge:"Flecha completa", csn_psa:"Pez Austral completo", csn_cap:"Capricornio completo", csn_aqr:"Acuario completo", csn_lib:"Libra completa", csn_oph:"Ofiuco completo", csn_cnc:"Cancro completo", csn_vir:"Vergine completa", csn_and:"Andromeda completa", csn_cep:"Cefeo completo", csn_dra:"Drago completo", csn_her:"Ercole completo", csn_aur:"Auriga completo", csn_del:"Delfino completo", csn_sge:"Freccia completa", csn_psa:"Pesce Australe completo", csn_cap:"Capricorno completo", csn_aqr:"Acquario completo", csn_lib:"Bilancia completa", csn_oph:"Ofiuco completo", csn_per:"Perseo completo", csn_cma:"Can Mayor completo", csn_lyr:"Lira completa", csn_aql:"Águila completa", csn_peg:"Pegaso completo", csn_crb:"Corona Boreal completa", csn_boo:"Boyero completo", csn_umi:"Osa Menor completa", csn_leo:"Leo completo", csn_cyg:"Cisne completo", csn_sco:"Escorpio completo", csn_gem:"Géminis completo", csn_tau:"Tauro completo", csn_sgr:"Sagitario completo",
       quit_saved:"Progreso guardado", undo_empty:"Nada que deshacer",
@@ -990,8 +1057,8 @@ const I18N = {
       progress:"%n níveis resolvidos · %d diamantes",
       play_progress:"Nível %n · %p pts · %d ◆",
       t_beyond:"Além",
-      sky:"Céu", sky_count:"%s estrela acesa|%s estrelas acesas", sky_hint:"Um dedo para se deslocar, dois para ampliar.",
-      sky_solved:"%n níveis resolvidos",
+      sky:"Céu", sky_count:"%s estrela acesa|%s estrelas acesas", sky_hint:"Um dedo para se deslocar, dois para ampliar.", sky_hint_souris:"Use a roda do mouse ou clique duas vezes para ampliar; arraste para se deslocar.", sky_zin:"Ampliar", sky_zout:"Reduzir", sky_zfit:"Céu inteiro",
+      sky_solved:"%n níveis resolvidos", sky_solved1:"1 nível resolvido",
       sky_empty:"Nada ainda. Resolva um nível para acender sua primeira estrela.",
       sky_complete:"Céu completo", csn_uma:"Ursa Maior completa", csn_cas:"Cassiopeia completa", csn_ori:"Órion completo", csn_cru:"Cruzeiro do Sul completo", csn_sys:"Sistema solar completo", csn_cnc:"Câncer completo", csn_vir:"Virgem completa", csn_and:"Andrômeda completa", csn_cep:"Cefeu completo", csn_dra:"Dragão completo", csn_her:"Hércules completo", csn_aur:"Cocheiro completo", csn_del:"Delfim completo", csn_sge:"Flecha completa", csn_psa:"Peixe Austral completo", csn_cap:"Capricórnio completo", csn_aqr:"Aquário completo", csn_lib:"Libra completa", csn_oph:"Ofiúco completo", csn_per:"Perseu completo", csn_cma:"Cão Maior completo", csn_lyr:"Lira completa", csn_aql:"Águia completa", csn_peg:"Pégaso completo", csn_crb:"Coroa Boreal completa", csn_boo:"Boieiro completo", csn_umi:"Ursa Menor completa", csn_leo:"Leão completo", csn_cyg:"Cisne completo", csn_sco:"Escorpião completo", csn_gem:"Gêmeos completo", csn_tau:"Touro completo", csn_sgr:"Sagitário completo",
       quit_saved:"Progresso salvo", undo_empty:"Nada a desfazer",
@@ -1038,7 +1105,7 @@ const I18N = {
       progress:"%n Level gelöst · %d Diamanten",
       play_progress:"Level %n · %p Pkt. · %d ◆",
       t_beyond:"Darüber hinaus",
-      sky:"Himmel", sky_count:"%s Stern leuchtet|%s Sterne leuchten", sky_hint:"Ein Finger zum Bewegen, zwei zum Vergrößern.",
+      sky:"Himmel", sky_count:"%s Stern leuchtet|%s Sterne leuchten", sky_hint:"Ein Finger zum Bewegen, zwei zum Vergrößern.", sky_hint_souris:"Mausrad oder Doppelklick zum Vergrößern, Ziehen zum Bewegen.", sky_zin:"Vergrößern", sky_zout:"Verkleinern", sky_zfit:"Ganzer Himmel",
       sky_solved:"%n Level gelöst",
       sky_empty:"Noch nichts. Lösen Sie ein Level, um Ihren ersten Stern zu entzünden.",
       sky_complete:"Himmel vollständig", csn_uma:"Großer Bär vollständig", csn_cas:"Kassiopeia vollständig", csn_ori:"Orion vollständig", csn_cru:"Kreuz des Südens vollständig",csn_sys:"Sonnensystem vollständig", csn_cnc:"Krebs vollständig", csn_vir:"Jungfrau vollständig", csn_and:"Andromeda vollständig", csn_cep:"Kepheus vollständig", csn_dra:"Drache vollständig", csn_her:"Herkules vollständig", csn_aur:"Fuhrmann vollständig", csn_del:"Delfin vollständig", csn_sge:"Pfeil vollständig", csn_psa:"Südlicher Fisch vollständig", csn_cap:"Steinbock vollständig", csn_aqr:"Wassermann vollständig", csn_lib:"Waage vollständig", csn_oph:"Schlangenträger vollständig", csn_per:"Perseus vollständig", csn_cma:"Großer Hund vollständig", csn_lyr:"Leier vollständig", csn_aql:"Adler vollständig", csn_peg:"Pegasus vollständig", csn_crb:"Nördliche Krone vollständig", csn_boo:"Bärenhüter vollständig", csn_umi:"Kleiner Bär vollständig", csn_leo:"Löwe vollständig", csn_cyg:"Schwan vollständig", csn_sco:"Skorpion vollständig", csn_gem:"Zwillinge vollständig", csn_tau:"Stier vollständig", csn_sgr:"Schütze vollständig",
@@ -1086,8 +1153,8 @@ const I18N = {
       progress:"%n livelli risolti · %d diamanti",
       play_progress:"Livello %n · %p pt · %d ◆",
       t_beyond:"Oltre",
-      sky:"Cielo", sky_count:"%s stella accesa|%s stelle accese", sky_hint:"Un dito per spostarti, due per ingrandire.",
-      sky_solved:"%n livelli risolti",
+      sky:"Cielo", sky_count:"%s stella accesa|%s stelle accese", sky_hint:"Un dito per spostarti, due per ingrandire.", sky_hint_souris:"Rotellina o doppio clic per ingrandire, trascina per spostarti.", sky_zin:"Ingrandisci", sky_zout:"Riduci", sky_zfit:"Cielo intero",
+      sky_solved:"%n livelli risolti", sky_solved1:"1 livello risolto",
       sky_empty:"Ancora nulla. Risolvi un livello per accendere la tua prima stella.",
       sky_complete:"Cielo completo", csn_uma:"Orsa Maggiore completa", csn_cas:"Cassiopea completa", csn_ori:"Orione completo", csn_cru:"Croce del Sud completa", csn_sys:"Sistema solare completo", csn_cnc:"Cancro completo", csn_vir:"Vergine completa", csn_and:"Andromeda completa", csn_cep:"Cefeo completo", csn_dra:"Drago completo", csn_her:"Ercole completo", csn_aur:"Auriga completo", csn_del:"Delfino completo", csn_sge:"Freccia completa", csn_psa:"Pesce Australe completo", csn_cap:"Capricorno completo", csn_aqr:"Acquario completo", csn_lib:"Bilancia completa", csn_oph:"Ofiuco completo", csn_per:"Perseo completo", csn_cma:"Cane Maggiore completo", csn_lyr:"Lira completa", csn_aql:"Aquila completa", csn_peg:"Pegaso completo", csn_crb:"Corona Boreale completa", csn_boo:"Bootes completo", csn_umi:"Orsa Minore completa", csn_leo:"Leone completo", csn_cyg:"Cigno completo", csn_sco:"Scorpione completo", csn_gem:"Gemelli completo", csn_tau:"Toro completo", csn_sgr:"Sagittario completo",
       quit_saved:"Progressi salvati", undo_empty:"Niente da annullare",
@@ -1144,7 +1211,7 @@ const I18N = {
       reset_ok:"Прогресс ещё можно восстановить.", locked:"Пройдите предыдущий уровень, чтобы открыть этот.", wall_msg:"Вы прошли все 150 уровней. Продолжение ждёт в магазине.", hint_only_msg:"Подсказка использована",
       hint_cost_msg:"-%n очк. из общего счёта", aide_suite:"В следующий раз в этом уровне будет новая головоломка.", aide_nouvelle:"🔄 Новая головоломка на этом уровне", paused:"Пауза", resume:"Продолжить", progress:"Пройдено уровней: %n · алмазов: %d",
       play_progress:"Уровень %n · %p очк. · %d ◆", t_beyond:"Дальше", sky:"Небо", sky_count:"Зажжена %s звезда|Зажжено %s звезды|Зажжено %s звёзд",
-      sky_hint:"Один палец — двигать, два — приблизить.", sky_solved:"Пройдено уровней: %n", sky_empty:"Пока пусто. Пройдите уровень, чтобы зажечь первую звезду.", sky_complete:"Небо завершено",
+      sky_hint:"Один палец — двигать, два — приблизить.", sky_hint_souris:"Колёсико или двойной щелчок — приблизить, перетаскивание — двигать.", sky_zin:"Приблизить", sky_zout:"Отдалить", sky_zfit:"Всё небо", sky_solved:"Пройдено уровней: %n", sky_empty:"Пока пусто. Пройдите уровень, чтобы зажечь первую звезду.", sky_complete:"Небо завершено",
       csn_uma:"Собрано: Большая Медведица", csn_cas:"Собрано: Кассиопея", csn_ori:"Собрано: Орион", csn_cru:"Собрано: Южный Крест",
       csn_sys:"Солнечная система собрана", csn_cnc:"Собрано: Рак", csn_vir:"Собрано: Дева", csn_and:"Собрано: Андромеда",
       csn_cep:"Собрано: Цефей", csn_dra:"Собрано: Дракон", csn_her:"Собрано: Геркулес", csn_aur:"Собрано: Возничий",
@@ -1204,7 +1271,7 @@ const I18N = {
       reset_ok:"まだ元に戻せます。", locked:"前のレベルをクリアすると、このレベルがアンロックされます。", wall_msg:"150レベルすべてをクリアしました。続きはショップで待っています。", hint_only_msg:"ヒントを使用しました",
       hint_cost_msg:"合計スコアから -%n ポイント", aide_suite:"次回、このレベルは新しいパズルになります。", aide_nouvelle:"🔄 このレベルに新しいパズル", paused:"一時停止", resume:"再開", progress:"%n レベルクリア · ダイヤ %d",
       play_progress:"レベル %n · %p pt · %d ◆", t_beyond:"その先", sky:"星空", sky_count:"%s 個の星が点灯",
-      sky_hint:"1本指で移動、2本指でズーム。", sky_solved:"%n レベルクリア", sky_empty:"まだ何もありません。レベルをクリアして、最初の星を灯しましょう。", sky_complete:"星空が完成しました",
+      sky_hint:"1本指で移動、2本指でズーム。", sky_hint_souris:"ホイールかダブルクリックでズーム、ドラッグで移動。", sky_zin:"拡大", sky_zout:"縮小", sky_zfit:"空全体", sky_solved:"%n レベルクリア", sky_empty:"まだ何もありません。レベルをクリアして、最初の星を灯しましょう。", sky_complete:"星空が完成しました",
       csn_uma:"おおぐま座が完成", csn_cas:"カシオペヤ座が完成", csn_ori:"オリオン座が完成", csn_cru:"みなみじゅうじ座が完成",
       csn_sys:"太陽系が完成", csn_cnc:"かに座が完成", csn_vir:"おとめ座が完成", csn_and:"アンドロメダ座が完成",
       csn_cep:"ケフェウス座が完成", csn_dra:"りゅう座が完成", csn_her:"ヘルクレス座が完成", csn_aur:"ぎょしゃ座が完成",
@@ -1264,7 +1331,7 @@ const I18N = {
       reset_ok:"Hâlâ geri yükleyebilirsin.", locked:"Bunu açmak için önceki seviyeyi bitir.", wall_msg:"150 seviyenin hepsini bitirdin. Devamı mağazada seni bekliyor.", hint_only_msg:"İpucu kullanıldı",
       hint_cost_msg:"Toplam puanından -%n puan", aide_suite:"Bir dahaki sefere bu seviyede yeni bir bulmaca olacak.", aide_nouvelle:"🔄 Bu seviye için yeni bulmaca", paused:"Duraklatıldı", resume:"Devam et", progress:"%n seviye çözüldü · %d elmas",
       play_progress:"Seviye %n · %p puan · %d ◆", t_beyond:"Ötesi", sky:"Gökyüzü", sky_count:"%s yıldız yandı",
-      sky_hint:"Kaydırmak için tek parmak, yakınlaştırmak için iki parmak.", sky_solved:"%n seviye çözüldü", sky_empty:"Henüz bir şey yok. İlk yıldızını yakmak için bir seviye çöz.", sky_complete:"Gökyüzü tamamlandı",
+      sky_hint:"Kaydırmak için tek parmak, yakınlaştırmak için iki parmak.", sky_hint_souris:"Yakınlaştırmak için tekerleği çevir ya da çift tıkla, gezinmek için sürükle.", sky_zin:"Yakınlaştır", sky_zout:"Uzaklaştır", sky_zfit:"Tüm gökyüzü", sky_solved:"%n seviye çözüldü", sky_empty:"Henüz bir şey yok. İlk yıldızını yakmak için bir seviye çöz.", sky_complete:"Gökyüzü tamamlandı",
       csn_uma:"Büyükayı tamamlandı", csn_cas:"Kassiopeia tamamlandı", csn_ori:"Avcı (Orion) tamamlandı", csn_cru:"Güney Haçı tamamlandı",
       csn_sys:"Güneş Sistemi tamamlandı", csn_cnc:"Yengeç tamamlandı", csn_vir:"Başak tamamlandı", csn_and:"Andromeda tamamlandı",
       csn_cep:"Kefeus tamamlandı", csn_dra:"Ejderha tamamlandı", csn_her:"Herkül tamamlandı", csn_aur:"Arabacı tamamlandı",
@@ -1324,7 +1391,7 @@ const I18N = {
       reset_ok:"Μπορείς ακόμη να την επαναφέρεις.", locked:"Ολοκλήρωσε το προηγούμενο επίπεδο για να ξεκλειδώσεις αυτό.", wall_msg:"Ολοκλήρωσες και τα 150 επίπεδα. Η συνέχεια σε περιμένει στο κατάστημα.", hint_only_msg:"Χρησιμοποιήθηκε υπόδειξη",
       hint_cost_msg:"-%n πόντοι από τη συνολική σου βαθμολογία", aide_suite:"Την επόμενη φορά, αυτό το επίπεδο θα έχει νέο γρίφο.", aide_nouvelle:"🔄 Νέος γρίφος για αυτό το επίπεδο", paused:"Παύση", resume:"Συνέχεια", progress:"%n επίπεδα λυμένα · %d διαμάντια",
       play_progress:"Επίπεδο %n · %p πόντοι · %d ◆", t_beyond:"Πέρα", sky:"Ουρανός", sky_count:"%s αστέρι αναμμένο|%s αστέρια αναμμένα",
-      sky_hint:"Ένα δάχτυλο για μετακίνηση, δύο για ζουμ.", sky_solved:"%n επίπεδα λυμένα", sky_empty:"Τίποτα ακόμη. Λύσε ένα επίπεδο για να ανάψεις το πρώτο σου αστέρι.", sky_complete:"Ο ουρανός ολοκληρώθηκε",
+      sky_hint:"Ένα δάχτυλο για μετακίνηση, δύο για ζουμ.", sky_hint_souris:"Ροδέλα ή διπλό κλικ για ζουμ, σύρετε για μετακίνηση.", sky_zin:"Μεγέθυνση", sky_zout:"Σμίκρυνση", sky_zfit:"Όλος ο ουρανός", sky_solved:"%n επίπεδα λυμένα", sky_solved1:"1 επίπεδο λυμένο", sky_empty:"Τίποτα ακόμη. Λύσε ένα επίπεδο για να ανάψεις το πρώτο σου αστέρι.", sky_complete:"Ο ουρανός ολοκληρώθηκε",
       csn_uma:"Μεγάλη Άρκτος: ολοκληρώθηκε", csn_cas:"Κασσιόπη: ολοκληρώθηκε", csn_ori:"Ωρίων: ολοκληρώθηκε", csn_cru:"Σταυρός του Νότου: ολοκληρώθηκε",
       csn_sys:"Ηλιακό σύστημα: ολοκληρώθηκε", csn_cnc:"Καρκίνος: ολοκληρώθηκε", csn_vir:"Παρθένος: ολοκληρώθηκε", csn_and:"Ανδρομέδα: ολοκληρώθηκε",
       csn_cep:"Κηφέας: ολοκληρώθηκε", csn_dra:"Δράκων: ολοκληρώθηκε", csn_her:"Ηρακλής: ολοκληρώθηκε", csn_aur:"Ηνίοχος: ολοκληρώθηκε",
@@ -1384,7 +1451,7 @@ const I18N = {
       reset_ok:"Kamu masih bisa memulihkannya.", locked:"Selesaikan level sebelumnya untuk membuka level ini.", wall_msg:"Kamu sudah menyelesaikan 150 level. Lanjutannya menunggu di toko.", hint_only_msg:"Petunjuk dipakai",
       hint_cost_msg:"-%n poin dari skor totalmu", aide_suite:"Lain kali, level ini akan punya teka-teki baru.", aide_nouvelle:"🔄 Teka-teki baru untuk level ini", paused:"Dijeda", resume:"Lanjutkan", progress:"%n level selesai · %d berlian",
       play_progress:"Level %n · %p poin · %d ◆", t_beyond:"Lanjutan", sky:"Langit", sky_count:"%s bintang menyala",
-      sky_hint:"Satu jari untuk menggeser, dua jari untuk memperbesar.", sky_solved:"%n level selesai", sky_empty:"Belum ada apa-apa. Selesaikan satu level untuk menyalakan bintang pertamamu.", sky_complete:"Langit lengkap",
+      sky_hint:"Satu jari untuk menggeser, dua jari untuk memperbesar.", sky_hint_souris:"Gulir atau klik dua kali untuk memperbesar, seret untuk menggeser.", sky_zin:"Perbesar", sky_zout:"Perkecil", sky_zfit:"Seluruh langit", sky_solved:"%n level selesai", sky_empty:"Belum ada apa-apa. Selesaikan satu level untuk menyalakan bintang pertamamu.", sky_complete:"Langit lengkap",
       csn_uma:"Ursa Major lengkap", csn_cas:"Cassiopeia lengkap", csn_ori:"Orion lengkap", csn_cru:"Salib Selatan lengkap",
       csn_sys:"Tata Surya lengkap", csn_cnc:"Cancer lengkap", csn_vir:"Virgo lengkap", csn_and:"Andromeda lengkap",
       csn_cep:"Cepheus lengkap", csn_dra:"Draco lengkap", csn_her:"Hercules lengkap", csn_aur:"Auriga lengkap",
@@ -1444,7 +1511,7 @@ const I18N = {
       reset_ok:"아직 되돌릴 수 있어요.", locked:"이전 레벨을 완료하면 이 레벨이 열려요.", wall_msg:"150개 레벨을 모두 마쳤어요. 다음 이야기는 상점에서 기다리고 있어요.", hint_only_msg:"힌트 사용",
       hint_cost_msg:"총점에서 -%n 포인트", aide_suite:"다음에는 이 레벨에 새로운 퍼즐이 나와요.", aide_nouvelle:"🔄 이 레벨의 새로운 퍼즐", paused:"일시 정지", resume:"계속하기", progress:"%n개 레벨 완료 · 다이아몬드 %d개",
       play_progress:"레벨 %n · %p 포인트 · %d ◆", t_beyond:"그 너머", sky:"하늘", sky_count:"별 %s개 밝힘",
-      sky_hint:"한 손가락으로 이동, 두 손가락으로 확대.", sky_solved:"%n개 레벨 완료", sky_empty:"아직 아무것도 없어요. 레벨을 완료해 첫 번째 별을 밝혀 보세요.", sky_complete:"하늘 완성",
+      sky_hint:"한 손가락으로 이동, 두 손가락으로 확대.", sky_hint_souris:"휠이나 더블클릭으로 확대, 드래그로 이동.", sky_zin:"확대", sky_zout:"축소", sky_zfit:"하늘 전체", sky_solved:"%n개 레벨 완료", sky_empty:"아직 아무것도 없어요. 레벨을 완료해 첫 번째 별을 밝혀 보세요.", sky_complete:"하늘 완성",
       csn_uma:"큰곰자리 완성", csn_cas:"카시오페이아자리 완성", csn_ori:"오리온자리 완성", csn_cru:"남십자자리 완성",
       csn_sys:"태양계 완성", csn_cnc:"게자리 완성", csn_vir:"처녀자리 완성", csn_and:"안드로메다자리 완성",
       csn_cep:"케페우스자리 완성", csn_dra:"용자리 완성", csn_her:"헤르쿨레스자리 완성", csn_aur:"마차부자리 완성",
@@ -1504,7 +1571,7 @@ const I18N = {
       reset_ok:"你仍然可以恢復。", locked:"完成上一關即可解鎖這一關。", wall_msg:"你已完成全部 150 關。後續內容在商店等著你。", hint_only_msg:"已使用提示",
       hint_cost_msg:"總分 -%n 分", aide_suite:"下次這一關會換成新的謎題。", aide_nouvelle:"🔄 這一關換了新謎題", paused:"已暫停", resume:"繼續", progress:"已完成 %n 關 · %d 顆鑽石",
       play_progress:"第 %n 關 · %p 分 · %d ◆", t_beyond:"更遠處", sky:"星空", sky_count:"已點亮 %s 顆星",
-      sky_hint:"單指移動，雙指縮放。", sky_solved:"已完成 %n 關", sky_empty:"這裡還空空的。完成一關，點亮你的第一顆星。", sky_complete:"星空已完成",
+      sky_hint:"單指移動，雙指縮放。", sky_hint_souris:"滾輪或按兩下縮放，拖曳移動。", sky_zin:"放大", sky_zout:"縮小", sky_zfit:"整片天空", sky_solved:"已完成 %n 關", sky_empty:"這裡還空空的。完成一關，點亮你的第一顆星。", sky_complete:"星空已完成",
       csn_uma:"大熊座已完成", csn_cas:"仙后座已完成", csn_ori:"獵戶座已完成", csn_cru:"南十字座已完成",
       csn_sys:"太陽系已完成", csn_cnc:"巨蟹座已完成", csn_vir:"室女座已完成", csn_and:"仙女座已完成",
       csn_cep:"仙王座已完成", csn_dra:"天龍座已完成", csn_her:"武仙座已完成", csn_aur:"御夫座已完成",
@@ -1564,7 +1631,7 @@ const I18N = {
       reset_ok:"คุณยังกู้คืนได้", locked:"ผ่านด่านก่อนหน้าเพื่อปลดล็อกด่านนี้", wall_msg:"คุณผ่านครบทั้ง 150 ด่านแล้ว ส่วนต่อไปรออยู่ในร้านค้า", hint_only_msg:"ใช้คำใบ้แล้ว",
       hint_cost_msg:"-%n คะแนนจากคะแนนรวม", aide_suite:"ครั้งหน้า ด่านนี้จะมีปริศนาใหม่", aide_nouvelle:"🔄 ปริศนาใหม่สำหรับด่านนี้", paused:"หยุดชั่วคราว", resume:"เล่นต่อ", progress:"ผ่าน %n ด่าน · เพชร %d เม็ด",
       play_progress:"ด่าน %n · %p คะแนน · %d ◆", t_beyond:"ไกลออกไป", sky:"ท้องฟ้า", sky_count:"ดาวสว่างแล้ว %s ดวง",
-      sky_hint:"นิ้วเดียวเพื่อเลื่อน สองนิ้วเพื่อซูม", sky_solved:"ผ่าน %n ด่าน", sky_empty:"ยังไม่มีอะไรเลย ผ่านหนึ่งด่านเพื่อจุดดาวดวงแรกของคุณ", sky_complete:"ท้องฟ้าครบแล้ว",
+      sky_hint:"นิ้วเดียวเพื่อเลื่อน สองนิ้วเพื่อซูม", sky_hint_souris:"เลื่อนลูกกลิ้งหรือดับเบิลคลิกเพื่อซูม ลากเพื่อเลื่อน", sky_zin:"ขยาย", sky_zout:"ย่อ", sky_zfit:"ทั้งท้องฟ้า", sky_solved:"ผ่าน %n ด่าน", sky_empty:"ยังไม่มีอะไรเลย ผ่านหนึ่งด่านเพื่อจุดดาวดวงแรกของคุณ", sky_complete:"ท้องฟ้าครบแล้ว",
       csn_uma:"กลุ่มดาวหมีใหญ่ ครบแล้ว", csn_cas:"กลุ่มดาวแคสซิโอเปีย ครบแล้ว", csn_ori:"กลุ่มดาวนายพราน ครบแล้ว", csn_cru:"กลุ่มดาวกางเขนใต้ ครบแล้ว",
       csn_sys:"ระบบสุริยะ ครบแล้ว", csn_cnc:"กลุ่มดาวปู ครบแล้ว", csn_vir:"กลุ่มดาวหญิงสาว ครบแล้ว", csn_and:"กลุ่มดาวแอนดรอเมดา ครบแล้ว",
       csn_cep:"กลุ่มดาวซีฟีอัส ครบแล้ว", csn_dra:"กลุ่มดาวมังกร ครบแล้ว", csn_her:"กลุ่มดาวเฮอร์คิวลีส ครบแล้ว", csn_aur:"กลุ่มดาวสารถี ครบแล้ว",
@@ -1611,6 +1678,7 @@ const I18N = {
   },
   apply(){
     document.querySelectorAll("[data-t]").forEach(el => el.textContent = this.t(el.dataset.t));
+    try { requestAnimationFrame(ajusterDevise); } catch(e){}
     /* On garde l'attribut de langue — il sert aux lecteurs d'écran et à
        la césure des mots — mais l'interdiction de traduire reste posée
        en dur dans le document. */
@@ -1755,6 +1823,7 @@ const Daily = {
     }
     n.textContent = note;
     Classement.syncBouton(); Classement.synchroniser(); Classement.actualiserJour(); Sceaux.medaillon();
+    try { Avent.sync(); } catch(e){}   /* 1.84 */
     /* Dimanche : le vitrail se calcule en douce pendant que le joueur est sur l'accueil. */
     if (th === "vitrail" && !faite && !this.actif) setTimeout(() => { if (!Daily.actif) Vitrail.preparer(Daily.numeroJour()); }, 900);
   },
@@ -1945,6 +2014,7 @@ const Daily = {
       while (cles.length > 60) delete o.resultats[cles.shift()];   // borne mémoire
       delete o.enCours;
       this.ecrire(o);
+      try { Avent.noter(); } catch(e){}   /* 1.84 : l'Hexagone est gagné à l'instant même */
       Classement.apresPuzzle(GameManager.elapsed, !ind, o.serie, auj);   // classement : temps SANS indice seulement
       Sceaux.envoyerSucces();
     }
@@ -2001,6 +2071,7 @@ const Daily = {
     no.textContent = T("d_accueil"); no.style.display = "";
     ok.onclick = () => this.partager();
     no.onclick = () => this.quitter();
+    if (duJour && Avent.saison()){ no.textContent = "✦ " + Avent.t(0); no.onclick = () => { this.quitter(); Avent.ouvrir(); }; }   /* 1.84 */
     document.getElementById("ov-msg").classList.add("on");
   },
   /** Partage natif (appli), puis Web Share, puis presse-papier, puis texte affiché. */
@@ -5482,6 +5553,486 @@ const MonetizationManager = {
              mémoire : sinon un rechargement de page l'effacerait
              et permettrait de contourner la pénalité.
    ============================================================ */
+/* ============================================================
+   Joaillier (1.84, maquette validée par Fabien le 26 nov.) — la victoire
+   ordinaire devient un BIJOU : une lisière dorée court sur le contour de
+   chaque pièce (les arêtes intérieures s'annulent), un reflet de lumière
+   balaie le puzzle en diagonale, exactement dans la forme des pierres,
+   puis neuf étincelles à quatre branches s'allument aux arêtes ; un
+   tintement cristallin les accompagne. Calque à part, posé sur le
+   plateau : rien dans le dessin du jeu n'est modifié.
+   ============================================================ */
+/* ============================================================
+   Avent étoilé (1.84, décidé avec Fabien le 26 nov.) — du 1er au 24 déc.,
+   chaque Puzzle du jour réussi allume une VRAIE étoile du ciel d'hiver,
+   dans l'ordre ; les 24 dessinent Orion, les Pléiades et le Grand
+   Hexagone d'hiver. Règles validées : un jour manqué n'empêche jamais
+   d'allumer l'étoile suivante ; on peut finir jusqu'au 6 janvier ; les
+   24 allumées → l'Hexagone doré apparaît dans le Ciel principal, avec le
+   sceau « Hiver AAAA ». Chaque case du calendrier est une pierre rare du
+   jeu (moteur Verre), choisie d'après la couleur réelle de son étoile.
+   ============================================================ */
+const AVENT_ESSAI = null;   /* test interne uniquement : "AAAA-MM-JJ" avance l'ouverture. JAMAIS en production (vérifié à la livraison). */
+const Avent = {
+  CLE: "branoxy-avent", on: false, cv: null, fond: null, L: null, bloom: null, raf: 0,
+  /* [nom, AD (h), Déc (°), magnitude, couleur réelle (température), pierre] — positions J2000 */
+  E: (() => { const ra = (h, m, s) => h + m / 60 + s / 3600, de = (d, m, neg) => (neg ? -1 : 1) * (d + m / 60);
+    const R = { or:"#D9A92E", opa:"#DCE3EA", ame:"#7E3BC4", eme:"#0F9C66", sap:"#1E4CC9", rub:"#B8102C", amb:"#D8781A" };
+    return [
+      ["Alcyone",ra(3,47,29),de(24,6),2.9,"#BFD4FF",R.ame], ["Rigel",ra(5,14,32),de(8,12,1),0.13,"#A9C4FF",R.sap],
+      ["Mintaka",ra(5,32,0),de(0,18,1),2.2,"#BFD0FF",R.opa], ["Aldebaran",ra(4,35,55),de(16,31),0.85,"#FFB36B",R.amb],
+      ["Atlas",ra(3,49,10),de(24,3),3.6,"#C6D8FF",R.eme], ["Alnilam",ra(5,36,13),de(1,12,1),1.7,"#B5CCFF",R.sap],
+      ["Capella",ra(5,16,41),de(45,60),0.08,"#FFE7A8",R.or], ["Electra",ra(3,44,53),de(24,7),3.7,"#C6D8FF",R.ame],
+      ["Alnitak",ra(5,40,46),de(1,57,1),1.8,"#B5CCFF",R.opa], ["Pollux",ra(7,45,19),de(28,2),1.14,"#FFC98A",R.amb],
+      ["Maia",ra(3,45,50),de(24,22),3.9,"#C6D8FF",R.eme], ["Bellatrix",ra(5,25,8),de(6,21),1.64,"#B8CCFF",R.sap],
+      ["Castor",ra(7,34,36),de(31,53),1.58,"#DDE6FF",R.opa], ["Merope",ra(3,46,20),de(23,57),4.1,"#C6D8FF",R.ame],
+      ["Procyon",ra(7,39,18),de(5,14),0.34,"#FFF3D6",R.or], ["Saiph",ra(5,47,45),de(9,40,1),2.1,"#B5CCFF",R.sap],
+      ["Taygeta",ra(3,45,12),de(24,28),4.3,"#C6D8FF",R.eme], ["Elnath",ra(5,26,18),de(28,36),1.65,"#CFDCFF",R.opa],
+      ["Alhena",ra(6,37,43),de(16,24),1.9,"#E4ECFF",R.ame], ["Menkalinan",ra(5,59,32),de(44,57),1.9,"#E8EEFF",R.eme],
+      ["Mirzam",ra(6,22,42),de(17,57,1),2.0,"#B8CCFF",R.sap], ["Adhara",ra(6,58,38),de(28,58,1),1.5,"#C2D3FF",R.ame],
+      ["Sirius",ra(6,45,9),de(16,43,1),-1.46,"#E6EEFF",R.opa], ["Betelgeuse",ra(5,55,10),de(7,24),0.5,"#FF9A5C",R.rub],
+    ]; })(),
+  HEX: ["Sirius","Procyon","Pollux","Capella","Aldebaran","Rigel"],
+  ORI: [["Betelgeuse","Bellatrix"],["Bellatrix","Mintaka"],["Mintaka","Alnilam"],["Alnilam","Alnitak"],["Alnitak","Saiph"],["Saiph","Rigel"],["Rigel","Mintaka"],["Alnitak","Betelgeuse"],["Castor","Pollux"],["Capella","Menkalinan"],["Aldebaran","Elnath"]],
+  TX: {
+    fr:["Avent étoilé","Le Grand Hexagone d'hiver","Chaque Puzzle du jour allume une vraie étoile d'hiver.","Le Grand Hexagone d'hiver brille en entier !","Allumer l'étoile du soir : %s","Prochaine étoile demain : %s","La voir dans mon ciel","Ce soir : %s","Un jour manqué ? Aucun souci : jusqu'au 6 janvier.","Hiver %y"],
+    en:["Starry Advent","The Great Winter Hexagon","Each Daily Puzzle lights a real winter star.","The Great Winter Hexagon shines in full!","Light tonight's star: %s","Next star tomorrow: %s","See it in my sky","Tonight: %s","Missed a day? No worries: until January 6.","Winter %y"],
+    es:["Adviento estrellado","El Gran Hexágono de invierno","Cada Puzle del día enciende una estrella real de invierno.","¡El Gran Hexágono de invierno brilla entero!","Encender la estrella de esta noche: %s","Próxima estrella mañana: %s","Verla en mi cielo","Esta noche: %s","¿Te saltaste un día? Tranquilo: hasta el 6 de enero.","Invierno %y"],
+    pt:["Advento estrelado","O Grande Hexágono de inverno","Cada Puzzle do dia acende uma estrela real de inverno.","O Grande Hexágono de inverno brilha por inteiro!","Acender a estrela desta noite: %s","Próxima estrela amanhã: %s","Vê-la no meu céu","Esta noite: %s","Perdeu um dia? Sem problema: até 6 de janeiro.","Inverno %y"],
+    de:["Sternen-Advent","Das Große Wintersechseck","Jedes Puzzle des Tages entzündet einen echten Winterstern.","Das Große Wintersechseck leuchtet vollständig!","Stern des Abends entzünden: %s","Nächster Stern morgen: %s","In meinem Himmel ansehen","Heute Abend: %s","Einen Tag verpasst? Kein Problem: bis zum 6. Januar.","Winter %y"],
+    it:["Avvento stellato","Il Grande Esagono d'inverno","Ogni Puzzle del giorno accende una vera stella d'inverno.","Il Grande Esagono d'inverno brilla per intero!","Accendi la stella di stasera: %s","Prossima stella domani: %s","Vederla nel mio cielo","Stasera: %s","Hai saltato un giorno? Nessun problema: fino al 6 gennaio.","Inverno %y"],
+    ru:["Звёздный адвент","Большой зимний шестиугольник","Каждая головоломка дня зажигает настоящую зимнюю звезду.","Большой зимний шестиугольник сияет целиком!","Зажечь звезду вечера: %s","Следующая звезда завтра: %s","Увидеть в моём небе","Сегодня вечером: %s","Пропустили день? Не страшно: до 6 января.","Зима %y"],
+    ja:["星のアドベント","冬の大六角形","今日のパズルをクリアするたびに、本物の冬の星がひとつ灯ります。","冬の大六角形がすべて輝きました！","今夜の星を灯す：%s","次の星は明日：%s","わたしの星空で見る","今夜：%s","1日逃しても大丈夫：1月6日まで。","%y年の冬"],
+    tr:["Yıldızlı Advent","Büyük Kış Altıgeni","Her Günün Bulmacası gerçek bir kış yıldızı yakar.","Büyük Kış Altıgeni tamamen parlıyor!","Bu gecenin yıldızını yak: %s","Sonraki yıldız yarın: %s","Gökyüzümde gör","Bu gece: %s","Bir günü mü kaçırdın? Sorun değil: 6 Ocak'a kadar.","Kış %y"],
+    el:["Έναστρα Χριστούγεννα","Το Μεγάλο Χειμερινό Εξάγωνο","Κάθε Παζλ της ημέρας ανάβει ένα αληθινό χειμωνιάτικο αστέρι.","Το Μεγάλο Χειμερινό Εξάγωνο λάμπει ολόκληρο!","Άναψε το αστέρι της βραδιάς: %s","Επόμενο αστέρι αύριο: %s","Δες το στον ουρανό μου","Απόψε: %s","Έχασες μια μέρα; Κανένα πρόβλημα: έως τις 6 Ιανουαρίου.","Χειμώνας %y"],
+    id:["Advent Berbintang","Heksagon Musim Dingin Raya","Setiap Puzzle harian menyalakan satu bintang musim dingin sungguhan.","Heksagon Musim Dingin Raya bersinar penuh!","Nyalakan bintang malam ini: %s","Bintang berikutnya besok: %s","Lihat di langitku","Malam ini: %s","Terlewat sehari? Tak apa: sampai 6 Januari.","Musim dingin %y"],
+    ko:["별빛 어드벤트","겨울 대육각형","오늘의 퍼즐을 풀 때마다 진짜 겨울 별 하나가 켜집니다.","겨울 대육각형이 모두 빛납니다!","오늘 밤의 별 켜기: %s","다음 별은 내일: %s","내 하늘에서 보기","오늘 밤: %s","하루 놓쳤나요? 괜찮아요: 1월 6일까지.","%y 겨울"],
+    zh:["星光降臨曆","冬季大六邊形","每完成一次每日謎題，就點亮一顆真正的冬季星星。","冬季大六邊形完整閃耀！","點亮今晚的星星：%s","下一顆星星（明天）：%s","在我的星空中查看","今晚：%s","錯過一天？沒關係：可以玩到 1 月 6 日。","%y 冬"],
+    th:["ปฏิทินดวงดาว","หกเหลี่ยมใหญ่แห่งฤดูหนาว","ทุกปริศนาประจำวันจะจุดดาวฤดูหนาวจริงหนึ่งดวง","หกเหลี่ยมใหญ่แห่งฤดูหนาวเปล่งประกายครบแล้ว!","จุดดาวของคืนนี้: %s","ดาวดวงถัดไปพรุ่งนี้: %s","ดูในท้องฟ้าของฉัน","คืนนี้: %s","พลาดไปหนึ่งวัน? ไม่เป็นไร: ได้ถึง 6 มกราคม","ฤดูหนาว %y"],
+  },
+  t(i){ const l = (this.TX[I18N.lang] || this.TX.en); return l[i] || this.TX.en[i]; },
+  nom(i){ const n = this.E[i][0]; return (n === "Betelgeuse" && I18N.lang === "fr") ? "Bételgeuse" : n; },
+
+  /* ---------- saison et progression ---------- */
+  /** { an, debut, fin } si l'Avent est ouvert aujourd'hui (jour du Puzzle du jour, 9 h), sinon null. */
+  saison(){
+    const j = Daily.jour(), y = +j.slice(0, 4), md = j.slice(5);
+    if (md >= "12-01") return { an: y, debut: y + "-12-01", fin: (y + 1) + "-01-06" };
+    if (md <= "01-06") return { an: y - 1, debut: (y - 1) + "-12-01", fin: y + "-01-06" };
+    if (AVENT_ESSAI && j >= AVENT_ESSAI) return { an: y, debut: AVENT_ESSAI, fin: (y + 1) + "-01-06" };
+    return null;
+  },
+  lire(){ try { return JSON.parse(localStorage.getItem(this.CLE)) || {}; } catch(e){ return {}; } },
+  ecrire(o){ try { localStorage.setItem(this.CLE, JSON.stringify(o)); } catch(e){} },
+  /** Nombre d'étoiles d'Avent allumées (Puzzles du jour réussis pendant la saison, 24 au plus). */
+  nb(S = this.saison()){
+    if (!S) return 0;
+    return Math.min(24, Daily.joursEtoiles().filter(d => d >= S.debut && d <= S.fin).length);
+  },
+  faitAujourdhui(){ return Daily.faiteAujourdhui(); },
+  /** Enregistre l'Hexagone d'or dès que les 24 sont allumées (gardé pour toujours, même après la saison). */
+  noter(){
+    /* Calculé d'après les DATES des réussites, jamais d'après le jour où l'on regarde : une 24e étoile gagnée le
+       6 janvier (ou une partie du 6 finie le 7 au matin) n'est jamais perdue, même si l'appli est fermée aussitôt. */
+    const par = {};
+    Daily.joursEtoiles().forEach(d => { const y = +d.slice(0, 4), md = d.slice(5);
+      const an = md >= "12-01" ? y : md <= "01-06" ? y - 1 : (AVENT_ESSAI && d >= AVENT_ESSAI && y === +AVENT_ESSAI.slice(0, 4)) ? y : null;
+      if (an !== null) (par[an] = par[an] || []).push(d); });
+    const o = this.lire(); let change = false; o.fini = o.fini || {};
+    Object.keys(par).forEach(an => { if (par[an].length >= 24 && !o.fini[an]){ o.fini[an] = par[an].sort()[23]; change = true; } });
+    if (change) this.ecrire(o);
+  },
+  /** Années d'Avent complètes (pour l'Hexagone doré du Ciel). */
+  hivers(){ return Object.keys(this.lire().fini || {}).sort(); },
+
+  /* ---------- porte d'accueil : médaillon étoilé à DROITE du « Puzzle du jour » (miroir des sceaux, aucune hauteur) ---------- */
+  sync(){
+    let b = document.getElementById("b-avent");
+    const S = this.saison();
+    if (!b){
+      const porte = document.querySelector(".sc-porte"); if (!porte) return;
+      b = document.createElement("button"); b.id = "b-avent"; b.className = "av-porte"; b.style.display = "none";
+      b.innerHTML = '<span class="av-et">✦</span><span class="av-n"></span>';
+      b.onclick = e => { e.stopPropagation(); this.ouvrir(); };
+      porte.appendChild(b);
+    }
+    this.noter();
+    if (!S){ b.style.display = "none"; return; }
+    const n = this.nb(S);
+    b.querySelector(".av-n").textContent = n + "/24";
+    b.setAttribute("aria-label", this.t(0) + " " + n + "/24"); b.title = this.t(0);
+    b.classList.toggle("av-attend", n < 24 && !this.faitAujourdhui());
+    b.style.display = "";
+    /* Première visite de la saison : l'Avent se présente de lui-même, une seule fois (l'événement). */
+    const o = this.lire(), cle = "intro" + S.an;
+    const aJoue = Object.keys(SaveManager.data.stars || {}).length > 0 || Daily.nbEtoiles() > 0;   /* un tout nouveau joueur découvre d'abord le jeu */
+    if (!o[cle] && aJoue && !this.on && !this._introPrevue){
+      this._introPrevue = true;
+      setTimeout(() => { this._introPrevue = false;
+        const home = document.getElementById("s-home");
+        if (!home || !home.classList.contains("on") || document.querySelector(".overlay.on") || Daily.actif || this.on) return;
+        const o2 = this.lire(); if (o2[cle]) return; o2[cle] = 1; this.ecrire(o2); this.ouvrir(); }, 1200);
+    }
+  },
+
+  /* ---------- écran ---------- */
+  init(){
+    if (this.cv) return;
+    const ov = document.createElement("div"); ov.id = "ov-avent"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+    ov.innerHTML = '<canvas id="av-cv" aria-hidden="true"></canvas><button class="iconbtn" id="av-x">✕</button><button class="btn primary" id="av-go"><span class="av-go-t"></span></button>';
+    document.body.appendChild(ov);
+    this.ov = ov; this.cv = ov.querySelector("#av-cv");
+    ov.querySelector("#av-x").onclick = () => this.fermer();
+    ov.querySelector("#av-go").onclick = () => this.action();
+    window.addEventListener("resize", () => { if (this.on){ this._cache = null; this.mise(); } });
+    document.addEventListener("keydown", e => { if (!this.on) return;
+      if (e.key === "Escape"){ e.preventDefault(); this.fermer(); return; }
+      if (e.key === "Tab"){   /* le focus reste dans l'Avent */
+        const a = document.getElementById("av-x"), z = document.getElementById("av-go");
+        if (e.shiftKey && document.activeElement === a){ e.preventDefault(); z.focus(); }
+        else if (!e.shiftKey && document.activeElement === z){ e.preventDefault(); a.focus(); }
+        else if (document.activeElement !== a && document.activeElement !== z){ e.preventDefault(); z.focus(); } } });
+  },
+  ouvrir(){
+    if (!this.saison() && !this.hivers().length) return;
+    this.init(); this.noter();
+    this.on = true; this.ov.classList.add("on");
+    const S = this.saison(), n = this.nb(S), o = this.lire(), cle = S ? String(S.an) : "";
+    /* L'étoile tout juste gagnée s'allume SOUS les yeux du joueur, une seule fois. */
+    this.bloom = (S && n > 0 && (o.vu || {})[cle] !== n) ? { i: n - 1, t0: performance.now() } : null;
+    if (S){ o.vu = o.vu || {}; o.vu[cle] = n; o["intro" + S.an] = 1; this.ecrire(o); }   /* vue une fois = plus jamais d'ouverture automatique */
+    this.ov.setAttribute("aria-label", this.t(0));
+    const bx = document.getElementById("av-x"); bx.setAttribute("aria-label", T("ad_wait")); bx.title = T("ad_wait");
+    this._cache = null; this.mise();
+    try { document.getElementById("av-go").focus({ preventScroll: true }); } catch(e){}
+    if (this.bloom){ try { Audio_.starRise(); } catch(e){} this.anime(); }
+  },
+  fermer(){
+    this.on = false; if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0; this.bloom = null;
+    if (this.ov) this.ov.classList.remove("on");
+    this._cache = null;
+    this.sync();
+    const b = document.getElementById("b-avent"); if (b && b.style.display !== "none") try { b.focus({ preventScroll: true }); } catch(e){}
+  },
+  retour(){ if (this.on){ this.fermer(); return true; } return false; },
+  action(){
+    const S = this.saison(), n = this.nb(S);
+    if (!S || n >= 24){ this.fermer(); const bs = document.getElementById("b-sky"); if (bs) bs.click(); return; }
+    if (this.faitAujourdhui()){ this.fermer(); return; }
+    this.fermer(); Daily.lancer();
+  },
+  anime(){
+    if (this.raf) cancelAnimationFrame(this.raf);
+    const pas = () => { if (!this.on) return; this.dessiner(); if (this.bloom && performance.now() - this.bloom.t0 < 2200) this.raf = requestAnimationFrame(pas); else { this.bloom = null; this.raf = 0; this.dessiner(); } };
+    this.raf = requestAnimationFrame(pas);
+  },
+  /** Calcule la mise en page (colonne portrait centrée), peint le décor fixe une fois, puis dessine. */
+  mise(){
+    const W = window.innerWidth, H = window.innerHeight, dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const paysage = W > H * 1.25;   /* écran large (téléphone couché, ordinateur) : ciel à gauche, calendrier à droite */
+    let L;
+    if (paysage){
+      const k = Math.max(.78, Math.min(4, H / 420, W / 900)), headH = 70 * k, btnH = 40 * k, bas = 12 * k, aideH = 24 * k, gap = 5 * k;
+      const demi = W / 2, cellW = (demi - 64 * k - 5 * gap) / 6;
+      const cell = Math.floor(Math.min(cellW, (H - headH - btnH - bas - aideH - 10 * k - 3 * gap) / 4));
+      const calW = 6 * cell + 5 * gap, rx = demi + (demi - calW) / 2;
+      const calTop = H - bas - btnH - aideH - (4 * cell + 3 * gap);
+      L = { W, H, dpr, CW: W, cx: W / 2, colX: 0, k, cell, gap, calX: rx, calTop, btnH, bas, paysage: true,
+        zone: { x: 14 * k, y: headH, w: demi - 20 * k, h: H - headH - 30 * k },
+        btnX: rx, btnW: calW, txtCx: rx + calW / 2, txtW: calW + 20 * k,
+        panneau: { x: rx - 18 * k, y: calTop - 18 * k, w: calW + 36 * k, h: H - calTop + 18 * k } };
+    } else {
+      const CW = Math.min(W, Math.max(360, H * 0.58)), cx = W / 2, colX = cx - CW / 2;
+      const k = Math.max(.82, Math.min(1.7, Math.min(CW / 390, H / 760)));
+      const headH = 92 * k, btnH = 46 * k, bas = 18 * k, aideH = 30 * k, gap = 7 * k;
+      const cellW = (CW - 28 * k - 5 * gap) / 6, dispo = H - headH - btnH - bas - aideH;
+      const cell = Math.floor(Math.min(cellW, (dispo * .44 - 3 * gap) / 4));
+      const calW = 6 * cell + 5 * gap, calX = cx - calW / 2, calTop = H - bas - btnH - aideH - (4 * cell + 3 * gap);
+      L = { W, H, dpr, CW, cx, colX, k, cell, gap, calX, calTop, btnH, bas, paysage: false,
+        /* écran large (ordinateur) : le ciel prend toute la largeur utile, pas seulement la colonne du calendrier */
+        zone: { x: colX + 14 * k, y: headH, w: CW - 28 * k, h: Math.max(120, calTop - 18 * k - headH) },
+        btnX: colX + 14 * k, btnW: CW - 28 * k, txtCx: cx, txtW: CW - 28 * k };
+    }
+    this.L = L;
+    const cv = this.cv; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + "px"; cv.style.height = H + "px";
+    const go = document.getElementById("av-go");
+    go.style.cssText = "position:absolute;left:" + L.btnX + "px;top:" + (H - L.bas - L.btnH) + "px;width:" + L.btnW + "px;height:" + L.btnH + "px;font-size:" + Math.round(13 * L.k) + "px;padding:0 10px;letter-spacing:.02em";
+    /* le titre ne passe jamais sous le ✕ : largeur libre = deux fois la distance du centre au bouton */
+    const bx = document.getElementById("av-x").getBoundingClientRect();
+    L.titreW = Math.max(120, 2 * ((bx.left || W) - L.cx) - 10);
+    this.fond = this.peindreFond(); this._cache = null;
+    this.dessiner();
+  },
+  /** Le texte du bouton tient TOUJOURS : la police rétrécit jusqu'à 72 %, puis « … » (le nom de l'étoile reste en fin). */
+  ajusterBouton(go, txt){
+    const sp = go.querySelector(".av-go-t") || go; sp.textContent = txt;
+    const base = Math.round(13 * this.L.k); let t = base; sp.style.fontSize = t + "px";
+    while (sp.scrollWidth > go.clientWidth - 20 && t > base * .72){ t -= .5; sp.style.fontSize = t + "px"; }
+    go.setAttribute("aria-label", txt);
+  },
+  peindreFond(){
+    const { W, H, dpr, zone } = this.L, f = document.createElement("canvas"); f.width = Math.round(W * dpr); f.height = Math.round(H * dpr);
+    const g = f.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    let a = 7; const rnd = () => (a = (a * 16807) % 2147483647) / 2147483647;
+    const fd = g.createLinearGradient(0, 0, 0, H); fd.addColorStop(0, "#050B1A"); fd.addColorStop(.55, "#071226"); fd.addColorStop(1, "#03060C");
+    g.fillStyle = fd; g.fillRect(0, 0, W, H);
+    g.save(); g.translate(zone.x + zone.w * .5, zone.y + zone.h * .45); g.rotate(-.55);
+    for (let i = 0; i < 5; i++){ const R = Math.max(zone.w, zone.h) * .9, gr = g.createRadialGradient(0, 0, 0, 0, 0, R); gr.addColorStop(0, "rgba(120,150,220,.09)"); gr.addColorStop(1, "rgba(120,150,220,0)");
+      g.save(); g.scale(1, .22 + i * .03); g.fillStyle = gr; g.beginPath(); g.arc((rnd() - .5) * 60, 0, R, 0, 7); g.fill(); g.restore(); }
+    g.restore();
+    const nb = Math.round(420 * W * H / (390 * 844));
+    const xMax = this.L.paysage ? W * .5 : W;
+    for (let i = 0; i < nb; i++){ const x = rnd() * xMax, y = rnd() * H * .72, r = rnd() < .93 ? rnd() * .7 + .2 : rnd() * 1.2 + .6; g.globalAlpha = .15 + rnd() * .55; g.fillStyle = rnd() < .2 ? "#FFE9C8" : "#DDE8FF"; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    g.globalAlpha = 1;
+    const hy = zone.y + zone.h + 6, k = this.L.k;
+    const lu = g.createRadialGradient(W * .5, hy + 30, 10, W * .5, hy + 30, Math.max(W, 400) * .75); lu.addColorStop(0, "rgba(255,190,120,.28)"); lu.addColorStop(.5, "rgba(200,140,190,.10)"); lu.addColorStop(1, "rgba(80,60,140,0)");
+    g.fillStyle = lu; g.fillRect(0, 0, W, hy + 40);
+    const sapins = (base, haut, dens, col, neige) => { let x = -10; while (x < W + 20){ const h = haut * (.55 + rnd() * .6), w = h * .42, cx = x + w / 2;
+        g.fillStyle = col; g.beginPath(); for (let q = 0; q < 4; q++){ const yy = base - h + q * h * .24, ww = w * (.35 + q * .22); g.moveTo(cx, yy); g.lineTo(cx - ww / 2, yy + h * .34); g.lineTo(cx + ww / 2, yy + h * .34); } g.fill();
+        g.fillRect(cx - w * .05, base - h * .06, w * .1, h * .08);
+        if (neige){ g.fillStyle = "rgba(225,235,255,.55)"; for (let q = 0; q < 4; q++){ const yy = base - h + q * h * .24 + h * .30, ww = w * (.35 + q * .22); g.beginPath(); g.ellipse(cx, yy, ww * .36, h * .025, 0, 0, 7); g.fill(); } }
+        x += w * dens * (.7 + rnd() * .6); } };
+    sapins(hy - 2, 46 * k, .9, "#0B1326", false); sapins(hy + 6, 62 * k, .75, "#070C18", true);
+    g.fillStyle = "#060A13"; g.fillRect(0, hy + 6, W, H - hy);
+    const pn = this.L.panneau; if (pn){ g.save(); g.fillStyle = "rgba(4,7,15,.72)"; g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 30 * k;
+      g.beginPath(); g.roundRect(pn.x, pn.y, pn.w, pn.h + 40, 18 * k); g.fill(); g.restore(); }
+    const ns = g.createLinearGradient(0, hy, 0, hy + 14); ns.addColorStop(0, "rgba(200,215,245,.35)"); ns.addColorStop(1, "rgba(200,215,245,0)"); g.fillStyle = ns; g.fillRect(0, hy + 2, W, 14);
+    for (let i = 0; i < 70 * W / 390; i++){ const x = rnd() * xMax, y = rnd() * (hy - 20), r = rnd() * 1.6 + .5; g.globalAlpha = .25 + rnd() * .45; g.fillStyle = "#FFFFFF"; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    g.globalAlpha = 1;
+    return f;
+  },
+  /** Texte qui tient dans une largeur : la police rétrécit jusqu'à 70 %, puis passe sur deux lignes. */
+  texte(g, s, x, y, larg, taille, poids, famille, interligne){
+    let t = taille; g.font = poids + " " + t + "px " + famille;
+    while (g.measureText(s).width > larg && t > taille * .72){ t -= .5; g.font = poids + " " + t + "px " + famille; }
+    if (g.measureText(s).width <= larg){ g.fillText(s, x, y); return; }
+    const mots = s.split(" "); let l1 = "", i = 0;
+    if (mots.length < 2){ const m = Math.ceil(s.length / 2); g.fillText(s.slice(0, m), x, y - t * .55); g.fillText(s.slice(m), x, y + t * (interligne || .75)); return; }
+    while (i < mots.length && g.measureText((l1 + " " + mots[i]).trim()).width <= larg) l1 = (l1 + " " + mots[i++]).trim();
+    g.fillText(l1, x, y - t * .55); g.fillText(mots.slice(i).join(" "), x, y + t * (interligne || .75));
+  },
+  dessiner(){
+    if (!this.on || !this.L) return;
+    const { W, H, dpr, CW, cx, colX, k, cell, gap, calX, calTop, zone } = this.L;
+    const B = this.bloom, viaCache = !!(B && this._cache && this._cacheI === B.i);
+    const g = this.cv.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(viaCache ? this._cache : this.fond, 0, 0); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const S = this.saison(), n = this.nb(S), fait = this.faitAujourdhui(), sauf = B ? B.i : -1;
+    const police = getComputedStyle(document.querySelector(".wordmark") || document.body).fontFamily, mono = "ui-monospace, Menlo, Consolas, monospace";
+    const now = performance.now(), u = B ? Math.min(1, (now - B.t0) / 1800) : 1;
+    /* projection : vraies coordonnées célestes */
+    const ra0 = 5.6, de0 = 10, kc = Math.cos(de0 * Math.PI / 180);
+    const P = this.E.map((e, i) => ({ i, n: e[0], x: -(e[1] - ra0) * 15 * kc, y: -(e[2] - de0), m: e[3], c: e[4] }));
+    const x0 = Math.min(...P.map(p => p.x)), x1 = Math.max(...P.map(p => p.x)), y0 = Math.min(...P.map(p => p.y)), y1 = Math.max(...P.map(p => p.y));
+    const s = Math.min((zone.w - 70 * k) / (x1 - x0), (zone.h - 70 * k) / (y1 - y0));
+    const ox = zone.x + zone.w / 2 - (x0 + x1) / 2 * s, oy = zone.y + zone.h / 2 - (y0 + y1) / 2 * s + 6 * k;
+    P.forEach(p => { p.X = ox + p.x * s; p.Y = oy + p.y * s; p.on = p.i < n; });
+    const Q = nm => P.find(p => p.n === nm), ks = Math.max(1, s / 9) * Math.min(k, 1.3);
+    const astre = (p, intens) => { const r = Math.max(1.6, 5.2 - p.m * 1.35) * (p.n === "Sirius" ? 1.25 : 1) * ks;
+      const h = g.createRadialGradient(p.X, p.Y, 0, p.X, p.Y, r * 6 * intens); h.addColorStop(0, p.c); h.addColorStop(.18, p.c + "AA"); h.addColorStop(1, p.c + "00");
+      g.fillStyle = h; g.beginPath(); g.arc(p.X, p.Y, r * 6 * intens, 0, 7); g.fill();
+      if (p.m < 1.7){ g.save(); g.translate(p.X, p.Y); g.globalAlpha = .75 * Math.min(1, intens); g.fillStyle = "#FFFFFF";
+        for (let i = 0; i < 4; i++){ g.rotate(Math.PI / 2); g.beginPath(); g.moveTo(0, -r * .16); g.lineTo(r * 4.2 * intens, 0); g.lineTo(0, r * .16); g.fill(); } g.restore(); }
+      g.fillStyle = "#FFFFFF"; g.beginPath(); g.arc(p.X, p.Y, r * .62 * Math.min(1, intens + .3), 0, 7); g.fill(); };
+    const caseXY = d => ({ x: calX + ((d - 1) % 6) * (cell + gap), y: calTop + Math.floor((d - 1) / 6) * (cell + gap) });
+    const fNum = (poids, px) => poids + " " + Math.round(Math.min(px * k, cell * .42)) + "px " + mono;
+    const pierre = (i, x, y, sc, fort) => { const cs = cell * sc, xs = x + (cell - cs) / 2, ys = y + (cell - cs) / 2;
+      const ctxS = Renderer.ctx, dprS = Renderer.dpr; Renderer.ctx = g; Renderer.dpr = dpr;
+      try { Renderer.piece([{ c: 0, r: 0 }], xs, ys, cs, this.E[i][5], {}); } catch(e){ g.fillStyle = this.E[i][5]; g.fillRect(xs, ys, cs, cs); }
+      Renderer.ctx = ctxS; Renderer.dpr = dprS;
+      g.save(); g.globalCompositeOperation = "lighter"; const sx = xs + cs * .30, sy = ys + cs * .26, sr = cs * (fort ? .22 : .14);
+      const gl = g.createRadialGradient(sx, sy, 0, sx, sy, sr * .6); gl.addColorStop(0, "rgba(255,255,255,.9)"); gl.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gl; g.beginPath(); g.arc(sx, sy, sr * .6, 0, 7); g.fill();
+      g.fillStyle = "rgba(255,255,255,.85)"; g.beginPath(); g.moveTo(sx, sy - sr); g.quadraticCurveTo(sx, sy, sx + sr * .9, sy); g.quadraticCurveTo(sx, sy, sx, sy + sr); g.quadraticCurveTo(sx, sy, sx - sr * .9, sy); g.quadraticCurveTo(sx, sy, sx, sy - sr); g.fill(); g.restore();
+      g.textAlign = "center"; g.textBaseline = "middle"; g.font = fNum("700", 11); g.fillStyle = "rgba(255,255,255,.95)"; g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 5;
+      g.fillText(String(i + 1), x + cell / 2, y + cell - Math.min(10 * k, cell * .2)); g.shadowBlur = 0; g.textBaseline = "alphabetic"; };
+    if (!viaCache){
+    g.lineCap = "round";
+    this.ORI.forEach(([a1, b1]) => { const A = Q(a1), Bq = Q(b1); const on = A.on && Bq.on;
+      g.strokeStyle = on ? "rgba(170,205,255,.42)" : "rgba(170,205,255,.10)"; g.lineWidth = on ? 1.2 : 1; g.setLineDash(on ? [] : [2, 4]);
+      g.beginPath(); g.moveTo(A.X, A.Y); g.lineTo(Bq.X, Bq.Y); g.stroke(); });
+    g.setLineDash([]);
+    this.HEX.forEach((nm, i) => { const A = Q(nm), Bq = Q(this.HEX[(i + 1) % 6]); const on = A.on && Bq.on;
+      if (on){ g.save(); g.shadowColor = "rgba(255,206,120,.9)"; g.shadowBlur = 14; g.strokeStyle = "rgba(255,214,140,.9)"; g.lineWidth = 2.2; g.beginPath(); g.moveTo(A.X, A.Y); g.lineTo(Bq.X, Bq.Y); g.stroke(); g.restore(); }
+      else { g.strokeStyle = "rgba(255,214,140,.30)"; g.lineWidth = 1.3; g.setLineDash([2, 6]); g.beginPath(); g.moveTo(A.X, A.Y); g.lineTo(Bq.X, Bq.Y); g.stroke(); g.setLineDash([]); } });
+    const prochaine = n < 24 ? n : -1;
+    P.forEach(p => {
+      if (p.on){ if (p.i !== sauf) astre(p, 1); }
+      else if (p.i === prochaine){
+        const R = 13 * Math.min(k, 1.3); g.save(); g.shadowColor = "rgba(255,214,140,.9)"; g.shadowBlur = 16; g.strokeStyle = "rgba(255,220,150,.95)"; g.lineWidth = 1.6;
+        g.beginPath(); g.arc(p.X, p.Y, R, 0, 7); g.stroke(); g.setLineDash([2, 4]); g.beginPath(); g.arc(p.X, p.Y, R + 7, 0, 7); g.stroke(); g.restore();
+        g.fillStyle = "rgba(255,240,210,.55)"; g.beginPath(); g.arc(p.X, p.Y, 2.2, 0, 7); g.fill();
+        g.font = "600 " + Math.round(11 * k) + "px " + mono; g.textAlign = "center"; g.fillStyle = "#FFE2A8"; g.shadowColor = "rgba(0,0,0,.8)"; g.shadowBlur = 4;
+        g.fillText(this.t(7).replace("%s", this.nom(p.i)), Math.max(zone.x + 76 * k, Math.min(zone.x + zone.w - 76 * k, p.X)), p.Y - R - 12); g.shadowBlur = 0;
+      } else { const r = Math.max(1.2, 3.2 - p.m * .8) * ks; g.fillStyle = "rgba(200,215,255,.32)"; g.beginPath(); g.arc(p.X, p.Y, r, 0, 7); g.fill(); g.strokeStyle = "rgba(200,215,255,.14)"; g.lineWidth = 1; g.beginPath(); g.arc(p.X, p.Y, r + 3.5, 0, 7); g.stroke(); }
+    });
+    /* noms des sommets de l'Hexagone allumés */
+    g.font = "600 " + Math.round(10 * k) + "px " + mono;
+    const hc = { x: this.HEX.reduce((a, nm) => a + Q(nm).X, 0) / 6, y: this.HEX.reduce((a, nm) => a + Q(nm).Y, 0) / 6 };
+    this.HEX.forEach(nm => { const p = Q(nm); if (!p.on) return; const dx = p.X - hc.x, dy = p.Y - hc.y, Lq = Math.hypot(dx, dy) || 1;
+      const lx = p.X + dx / Lq * 30 * k, ly = p.Y + dy / Lq * 24 * k + 4; g.textAlign = dx > 20 ? "left" : dx < -20 ? "right" : "center";
+      g.fillStyle = "rgba(255,226,170,.9)"; g.shadowColor = "rgba(0,0,0,.8)"; g.shadowBlur = 4; g.fillText(this.nom(p.i).toUpperCase(), lx, ly); g.shadowBlur = 0; });
+    /* sceau de l'hiver complet, au cœur de l'Hexagone */
+    if (n >= 24 && S){ g.save(); g.textAlign = "center"; g.font = "700 " + Math.round(12 * k) + "px " + mono; g.fillStyle = "#FFD98E"; g.shadowColor = "rgba(255,190,90,.9)"; g.shadowBlur = 12;
+      g.fillText("✦ " + this.t(9).replace("%y", S.an) + " ✦", hc.x, hc.y + 4); g.restore(); }
+    /* en-tête */
+    g.textAlign = "center"; g.fillStyle = "#EAF6FF"; g.letterSpacing = Math.round(5 * k) + "px";
+    this.texte(g, this.t(0).toUpperCase(), cx, (this.L.paysage ? 25 : 44) * k, this.L.titreW, Math.round((this.L.paysage ? 18 : 22) * k), "700", police); g.letterSpacing = "0px";
+    g.fillStyle = "#FFD58A"; g.font = "600 " + Math.round(12 * k) + "px " + mono; this.texte(g, this.t(1), cx, (this.L.paysage ? 44 : 65) * k, this.L.titreW, Math.round(12 * k), "600", mono);
+    g.font = "600 " + Math.round(11 * k) + "px " + mono; g.fillStyle = "rgba(220,235,255,.72)"; g.fillText(n + " / 24 ✦", cx, (this.L.paysage ? 62 : 82) * k);
+    /* calendrier : 24 pierres rares du jeu */
+    for (let d = 1; d <= 24; d++){
+      const { x, y } = caseXY(d), i = d - 1;
+      if (i === sauf) continue;
+      const ouverte = i < n, cible = i === prochaine && !fait;
+      if (ouverte) pierre(i, x, y, 1, false);
+      else {
+        g.fillStyle = "rgba(160,190,230,.07)"; g.strokeStyle = "rgba(170,200,240,.20)"; g.lineWidth = 1; g.beginPath(); g.roundRect(x + 1, y + 1, cell - 2, cell - 2, 7); g.fill(); g.stroke();
+        const gf = g.createLinearGradient(x, y, x + cell, y + cell); gf.addColorStop(0, "rgba(230,240,255,.16)"); gf.addColorStop(.5, "rgba(230,240,255,.03)"); gf.addColorStop(1, "rgba(230,240,255,.10)");
+        g.fillStyle = gf; g.beginPath(); g.roundRect(x + 1, y + 1, cell - 2, cell - 2, 7); g.fill();
+        if (cell >= 34){ g.save(); g.translate(x + cell - cell * .2, y + cell * .2); g.strokeStyle = "rgba(230,240,255,.28)"; g.lineWidth = 1; for (let q = 0; q < 3; q++){ g.rotate(Math.PI / 3); g.beginPath(); g.moveTo(-cell * .09, 0); g.lineTo(cell * .09, 0); g.stroke(); } g.restore(); }
+      }
+      if (i === prochaine){ g.save(); g.shadowColor = "rgba(255,214,140,1)"; g.shadowBlur = 18; g.strokeStyle = fait ? "rgba(255,217,142,.45)" : "#FFD98E"; g.lineWidth = 2.5; g.beginPath(); g.roundRect(x - 2, y - 2, cell + 4, cell + 4, 9); g.stroke(); g.restore(); }
+      g.textAlign = "center"; g.textBaseline = "middle";
+      if (cible){ g.font = fNum("800", 17); g.fillStyle = "#FFFFFF"; g.shadowColor = "rgba(0,0,0,.8)"; g.shadowBlur = 6; g.fillText(String(d), x + cell / 2, y + cell / 2); g.shadowBlur = 0; }
+      else if (!ouverte){ g.font = fNum("600", 15); g.fillStyle = "rgba(200,220,250,.45)"; g.fillText(String(d), x + cell / 2, y + cell / 2); }
+      g.textBaseline = "alphabetic";
+    }
+    /* aide + bouton */
+    const yb = calTop + 4 * cell + 3 * gap;
+    g.fillStyle = "rgba(220,235,255,.78)"; g.textAlign = "center";
+    this.texte(g, n >= 24 ? this.t(3) : (n > 0 && !fait && n + 1 < 24 ? this.t(8) : this.t(2)), this.L.txtCx, yb + (this.L.paysage ? 15 : 19) * k, this.L.txtW, Math.round(11 * k), "500", police, .7);
+    const go = document.getElementById("av-go");
+    this.ajusterBouton(go, (!S || n >= 24) ? "✦  " + this.t(6) : fait ? this.t(5).replace("%s", this.nom(n)) : "✦  " + this.t(4).replace("%s", this.nom(n)));
+    go.classList.toggle("av-calme", !!(S && n < 24 && fait));
+    if (B){   /* couche fixe gardée : pendant l'allumage, seules l'étoile et sa pierre sont redessinées */
+      const c = this._cache && this._cache.width === this.cv.width && this._cache.height === this.cv.height ? this._cache : document.createElement("canvas");
+      c.width = this.cv.width; c.height = this.cv.height; const cg = c.getContext("2d"); cg.clearRect(0, 0, c.width, c.height); cg.drawImage(this.cv, 0, 0);
+      this._cache = c; this._cacheI = B.i;
+    }
+    }   /* fin de la couche fixe */
+    /* couche animée : l'étoile qui s'allume (une onde, elle grandit au-delà de sa taille et se pose) et sa pierre */
+    if (B){
+      const p = P[B.i], e = u < .55 ? u / .55 : 1, sur = u < .55 ? 0 : Math.sin(Math.min(1, (u - .55) / .45) * Math.PI) * .6;
+      if (u < .9){ g.save(); g.globalAlpha = (1 - u) * .9; g.strokeStyle = "#FFE2A8"; g.lineWidth = 2; g.beginPath(); g.arc(p.X, p.Y, 6 + u * 70 * k, 0, 7); g.stroke(); g.restore(); }
+      astre(p, Math.max(.05, e + sur));
+      const { x, y } = caseXY(B.i + 1);
+      const sc = u < .35 ? .55 + .45 * (u / .35) * 1.12 : 1 + .08 * Math.sin(Math.min(1, (u - .35) / .4) * Math.PI);
+      pierre(B.i, x, y, sc, true);
+      if (u < 1){ g.save(); g.globalAlpha = (1 - u) * .8; g.strokeStyle = "#FFE7B0"; g.lineWidth = 2; g.shadowColor = "#FFD98E"; g.shadowBlur = 16; g.beginPath(); g.roundRect(x - 3 - u * 6, y - 3 - u * 6, cell + 6 + u * 12, cell + 6 + u * 12, 10); g.stroke(); g.restore(); }
+    }
+  },
+  /* ---------- l'Hexagone doré dans le Ciel principal ---------- */
+  dessinerCiel(sky, ctx){
+    const hv = this.hivers(); if (!hv.length || !sky.points) return;
+    const pt = nm => sky.points.find(p => p.nom === nm);
+    const Sx = pt("Sirius"), Po = pt("Pollux"), Ca = pt("Capella"), Al = pt("Aldebaran"), Ri = pt("Rigel");
+    if (!Sx || !Po || !Ca || !Al || !Ri) return;
+    /* Les constellations du Ciel sont placées chacune autour de son propre centre : relier directement leurs
+       étoiles donnait un Hexagone écrasé. On dessine donc la VRAIE forme de l'Hexagone (mêmes coordonnées que
+       l'écran de l'Avent, 7 px par degré comme le Ciel), centrée sur ses étoiles telles que le Ciel les montre. */
+    const ra0 = 5.6, de0 = 10, kc = Math.cos(de0 * Math.PI / 180), DEG = 7;
+    const vrai = this.HEX.map(nm => { const e = this.E.find(x => x[0] === nm); return { x: -(e[1] - ra0) * 15 * kc * DEG, y: -(e[2] - de0) * DEG }; });
+    const mx = vrai.reduce((a, q) => a + q.x, 0) / 6, my = vrai.reduce((a, q) => a + q.y, 0) / 6;
+    const ici = [Sx, Po, Ca, Al, Ri], cx0 = ici.reduce((a, q) => a + q.x, 0) / 5, cy0 = ici.reduce((a, q) => a + q.y, 0) / 5;
+    const S = vrai.map(q => sky.toScreen({ x: cx0 + q.x - mx, y: cy0 + q.y - my }));
+    ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.shadowColor = "rgba(255,206,120,.85)"; ctx.shadowBlur = 12; ctx.strokeStyle = "rgba(255,214,140,.75)"; ctx.lineWidth = 2;
+    ctx.beginPath(); S.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.stroke();
+    ctx.shadowBlur = 8; ctx.fillStyle = "#FFE7B0"; S.forEach(q => { ctx.beginPath(); ctx.arc(q.x, q.y, 2.6, 0, 7); ctx.fill(); });
+    const cxh = S.reduce((a, q) => a + q.x, 0) / 6, cyh = S.reduce((a, q) => a + q.y, 0) / 6, ke = window.__zOrdi || 1;
+    ctx.font = "700 " + Math.round(12 * ke) + "px ui-monospace, Menlo, Consolas, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#FFD98E"; ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = 5;
+    ctx.fillText("✦ " + hv.map(y => this.t(9).replace("%y", y)).join(" · ") + " ✦", cxh, cyh);
+    ctx.restore();
+  },
+};
+
+
+/* 1.84 : devise sur une ligne si possible, jamais un mot seul */
+function ajusterDevise(){
+  const t = document.querySelector(".tagline"); if (!t || !t.offsetParent) return;
+  t.style.letterSpacing = "";
+  const uneLigne = () => { const r = t.getClientRects(); const lh = parseFloat(getComputedStyle(t).fontSize) * 1.9; return t.getBoundingClientRect().height < lh; };
+  for (let e = .3; e >= .12 && !uneLigne(); e -= .02) t.style.letterSpacing = e.toFixed(2) + "em";
+  if (!uneLigne()) t.style.letterSpacing = "";
+}
+window.addEventListener("resize", ajusterDevise);
+try { document.fonts && document.fonts.ready.then(ajusterDevise); } catch(e){}
+const Joaillier = {
+  cv:null, raf:0, jeton:0, bas:0,
+  /** Fin naturelle : le calque s'efface, la place du popup reste connue jusqu'au niveau suivant. */
+  finir(){
+    if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0;
+    if (this.cv){ const g = this.cv.getContext("2d"); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,this.cv.width,this.cv.height); this.cv.style.display = "none"; }
+  },
+  arreter(){
+    this.jeton++; this.zone = null; if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0;
+    if (this.cv){ const g = this.cv.getContext("2d"); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,this.cv.width,this.cv.height); this.cv.style.display = "none"; }
+  },
+  lancer(){
+    this.arreter(); this.bas = 0;
+    const L = GameManager.level, B = Renderer.board, st = document.getElementById("stage");
+    if (!L || !B || !st || !(B.cell > 0)) return;
+    if (!this.cv){ this.cv = document.createElement("canvas"); this.cv.id = "joaillier"; this.cv.setAttribute("aria-hidden", "true");
+      this.cv.style.cssText = "position:absolute;left:0;top:0;pointer-events:none;z-index:2"; st.insertBefore(this.cv, document.getElementById("win-pop"));
+      window.addEventListener("resize", () => { if (this.raf) this.arreter(); }); }
+    const dpr = Renderer.dpr || 1, W = Renderer.W, H = Renderer.H, cell = B.cell, o = this.cv;
+    o.width = Math.round(W*dpr); o.height = Math.round(H*dpr); o.style.width = W+"px"; o.style.height = H+"px"; o.style.display = "";
+    const g = o.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
+    const poly = (ce, c0, r0) => { const c = ce.c+c0, r = ce.r+r0, TL=[c,r], TR=[c+1,r], BL=[c,r+1], BR=[c+1,r+1];
+      if (!ce.t) return [TL,TR,BR,BL]; return ({TL:[TL,TR,BL], TR:[TL,TR,BR], BR:[TR,BR,BL], BL:[TL,BR,BL]})[ce.t] || [TL,TR,BR,BL]; };
+    const forme = new Path2D(), bords = new Path2D(), coins = []; let x0=1e9, y0=1e9, x1=-1e9, y1=-1e9;
+    L.pieces.forEach(p => { if (!p.pos) return; const arete = new Map();
+      p.cells.forEach(ce => { const Pc = poly(ce, p.pos.c, p.pos.r), P = Pc.map(([c,r]) => [B.ox+c*cell, B.oy+r*cell]);
+        forme.moveTo(P[0][0], P[0][1]); P.slice(1).forEach(q => forme.lineTo(q[0], q[1])); forme.closePath();
+        Pc.forEach((q,i) => { const s = Pc[(i+1)%Pc.length], k = [q.join(","), s.join(",")].sort().join("|"); arete.set(k, (arete.get(k)||0)+1); });
+        P.forEach(([x,y]) => { x0=Math.min(x0,x); y0=Math.min(y0,y); x1=Math.max(x1,x); y1=Math.max(y1,y); coins.push([x,y]); }); });
+      arete.forEach((n,k) => { if (n !== 1) return; const [A,Z] = k.split("|").map(z => z.split(",").map(Number));
+        bords.moveTo(B.ox+A[0]*cell, B.oy+A[1]*cell); bords.lineTo(B.ox+Z[0]*cell, B.oy+Z[1]*cell); }); });
+    if (!coins.length){ this.arreter(); return; }
+    this.bas = y1; this.zone = { x0, y0, x1, y1 };
+    let a = 12345 + (L.n|0); const rnd = () => (a = (a*16807) % 2147483647) / 2147483647;
+    const etincelles = Array.from({length: 9}, () => { const k = coins[Math.floor(rnd()*coins.length)];
+      return { x: k[0] + (rnd()-.5)*cell*.3, y: k[1] + (rnd()-.5)*cell*.3, t0: 120 + rnd()*650, r: Math.min(cell, 90)*(.22+rnd()*.22), rot: rnd()*Math.PI }; });
+    const etoile = (x,y,r,al,rot) => { g.save(); g.translate(x,y); g.rotate(rot); g.globalAlpha = al;
+      const gr = g.createRadialGradient(0,0,0,0,0,r*.9); gr.addColorStop(0,"rgba(255,255,255,1)"); gr.addColorStop(.25,"rgba(255,246,214,.7)"); gr.addColorStop(1,"rgba(255,230,160,0)");
+      g.fillStyle = gr; g.beginPath(); g.arc(0,0,r*.9,0,7); g.fill();
+      g.fillStyle = "rgba(255,255,255,.95)"; for (let i=0;i<4;i++){ g.rotate(Math.PI/2); g.beginPath(); g.moveTo(0,-r*.09); g.lineTo(r*1.6,0); g.lineTo(0,r*.09); g.fill(); }
+      g.restore(); };
+    const jeton = this.jeton, t0 = performance.now(), lw = Math.max(2, Math.min(cell, 90)*.05);
+    const frame = () => {
+      if (jeton !== this.jeton) return;
+      const t = performance.now() - t0; g.clearRect(0,0,W,H);
+      const le = t < 180 ? t/180 : Math.max(0, 1 - (t-180)/700);
+      if (le > 0){ g.save(); g.globalCompositeOperation = "lighter"; g.lineJoin = "round"; g.lineCap = "round";
+        g.shadowColor = "rgba(255,214,120,.9)"; g.shadowBlur = Math.min(cell, 90)*.35; g.strokeStyle = "rgba(255,226,150," + (.85*le) + ")"; g.lineWidth = lw;
+        g.stroke(bords); g.restore(); }
+      if (t < 700){ const u = t/700, ease = u < .5 ? 2*u*u : 1 - Math.pow(-2*u+2, 2)/2;
+        const larg = (x1-x0)+(y1-y0), pos = x0 - (y1-y0) + ease*(larg + (y1-y0)), bande = Math.min(cell, 90)*1.1;
+        g.save(); g.clip(forme); g.globalCompositeOperation = "lighter";
+        const gr = g.createLinearGradient(pos-bande, y0, pos+bande, y0 + bande*.6);
+        gr.addColorStop(0,"rgba(255,255,255,0)"); gr.addColorStop(.45,"rgba(255,250,235,.55)"); gr.addColorStop(.5,"rgba(255,255,255,.85)"); gr.addColorStop(.55,"rgba(255,250,235,.55)"); gr.addColorStop(1,"rgba(255,255,255,0)");
+        g.fillStyle = gr; g.beginPath(); g.moveTo(pos-bande, y0-10); g.lineTo(pos+bande, y0-10); g.lineTo(pos+bande-(y1-y0)*.6, y1+10); g.lineTo(pos-bande-(y1-y0)*.6, y1+10); g.fill();
+        g.restore(); }
+      etincelles.forEach(e => { const u = (t - e.t0)/420; if (u < 0 || u > 1) return;
+        const al = u < .3 ? u/.3 : 1 - (u-.3)/.7; etoile(e.x, e.y, e.r*(.6 + .6*Math.sin(Math.PI*u)), al, e.rot + u*.6); });
+      if (t < 1400) this.raf = requestAnimationFrame(frame); else this.finir();
+    };
+    this.raf = requestAnimationFrame(frame);
+    /* Le tintement : trois « ting » de cristal (partiels inharmoniques d'une cloche), calés sur les étincelles. */
+    [140, 380, 640].forEach((d, i) => setTimeout(() => { if (jeton !== this.jeton) return;
+      const f = [2637, 3136, 3520][i]; Audio_.tone(f, .9, .035, "sine"); Audio_.tone(f*2.76, .35, .012, "sine"); Audio_.tone(f*5.4, .18, .006, "sine"); }, d));
+  },
+  /** Position du popup de victoire SOUS le plateau (px de scène), ou null s'il n'y tient pas. */
+  /* Sous le plateau s'il y tient ; sinon (ordinateur, plateau sur toute la hauteur) à DROITE du puzzle,
+     dans la place laissée par les pièces posées ; sinon null (place habituelle). */
+  placePop(wPop, hPop){
+    if (!this.bas || !this.zone) return null; const H = Renderer.H, W = Renderer.W, Z = this.zone, top = this.bas + 14;
+    if (top + hPop <= H - 6) return { top };
+    if (W - Z.x1 >= wPop + 48) return { top: Math.max(6, (Z.y0 + Z.y1) / 2 - hPop / 2), left: Z.x1 + 24 + wPop / 2 };
+    return null;
+  },
+};
+
 const GameManager = {
   level:null, state:null, running:false, t0:0, elapsed:0, paused:false, pausedAt:0,
   history:[], errors:0, hints:0, repositions:0,
@@ -5493,6 +6044,7 @@ const GameManager = {
   cameFrom:"s-home",
 
   start(n, opts){
+    Joaillier.arreter();   /* 1.84 */
     Renderer.etoile = null;   // 1.83 : le puzzle précédent, devenu étoile, ne doit pas cacher le nouveau
     /* Changer de niveau sans repasser par un autre écran : la partie de
        campagne en cours est gardée avant d'être remplacée. */
@@ -6044,7 +6596,8 @@ const GameManager = {
     if (!devient){
       Renderer.eclatAt = performance.now();
       if (Vitrail.actif()) Vitrail.finalAt = performance.now();
-    }
+      else Joaillier.lancer();   /* 1.84 : la victoire ordinaire devient un bijou */
+    } else Joaillier.arreter();
     Audio_.win(milestone);
     buzz(nouvelleEtoile ? [16,45,16,45,16,45,25,140] : milestone ? [20,50,20,50,34] : [18,60,18]);
     /* Toutes les pieces s'allument l'une apres l'autre. */
@@ -8399,7 +8952,7 @@ const Renderer = {
        bouge donc plus quand on en pose une ou qu'on en tourne une. */
     const empile = ()=>{
       const avail = this.H - pad*2;
-      let cell = Math.max(12, Math.floor(Math.min((this.W - pad*2) / LC, avail / LR, 116)));
+      let cell = Math.max(12, Math.floor(Math.min((this.W - pad*2) / LC, avail / LR, 116 * Math.min(window.__zOrdi || 1, 2))));
       let hold = this.packTray(L.pieces, trayCellOf(cell), true, this.W);
       while (cell > 15 && LR*cell + gapV + hold.height > avail){
         cell--;
@@ -8410,7 +8963,7 @@ const Renderer = {
 
     const cote = ()=>{
       const avail = this.H - pad*2;
-      let cell = Math.max(12, Math.floor(Math.min((this.W - pad*2) / LC, avail / LR, 116)));
+      let cell = Math.max(12, Math.floor(Math.min((this.W - pad*2) / LC, avail / LR, 116 * Math.min(window.__zOrdi || 1, 2))));
       let hold = null;
       while (cell > 15){
         const zoneW = this.W - pad*2 - LC*cell - gapH;
@@ -9553,6 +10106,7 @@ const InputManager = {
    ============================================================ */
 const UIManager = {
   show(id){
+    if (id !== "s-game") try { Joaillier.arreter(); } catch(e){}   /* 1.84 : le bijou ne survit pas à la sortie du jeu */
     if (id !== "s-game" && !Daily.actif && document.getElementById("s-game").classList.contains("on")) GameManager.sauverPartie();
     if (id !== "s-game" && Daily.actif) Daily.sortir();
     /* 1.72 — signalé par Fabien : pause puis retour à l'accueil = plus de musique. La pause coupe le son ; en quittant
@@ -9722,7 +10276,17 @@ const UIManager = {
   },
   /** Affiche #win-pop pour la durée de lecture de son texte ; rend cette durée (s). Au-delà de 1,6 s, l'animation
       « lente » (visible de 8 % à 85 % du temps) au lieu de la rapide (16 % à 72 %). */
-  montrerPop(pop, lent){
+  montrerPop(pop, lent, sousPlateau){
+    /* 1.84 : sur ordinateur, centré sur le plateau (en côte à côte, le centre de la scène tombe dans le vide).
+       #win-pop est zoomé : sa position s'exprime en pixels zoomés, d'où la division par z. */
+    if (document.documentElement.classList.contains("ordi") && GameManager.level){
+      const B = Renderer.board, L = GameManager.level, z = window.__zOrdi || 1;
+      pop.style.left = ((B.ox + L.cols * B.cell / 2) / z) + "px";
+    } else pop.style.left = "";
+    pop.style.top = "";
+    if (sousPlateau){ const z = document.documentElement.classList.contains("ordi") ? (window.__zOrdi || 1) : 1;
+      const pl = Joaillier.placePop(pop.offsetWidth * z, pop.offsetHeight * z);
+      if (pl){ pop.style.top = (pl.top / z) + "px"; if (pl.left !== undefined) pop.style.left = (pl.left / z) + "px"; } }
     const d = lent ? 4.2 : this.dureeLecture(pop.innerText);
     pop.classList.remove("rise", "lent"); pop.style.animationDuration = ""; void pop.offsetWidth;
     if (!lent && d > 1.6){ pop.classList.add("lent"); pop.style.animationDuration = d + "s"; }
@@ -9754,7 +10318,7 @@ const UIManager = {
         + '<div class="wp" style="opacity:.75;font-weight:400;font-size:12px">' + T("max_sous") + '</div>'
       : '<div class="ws">' + DIAMANTS(stars) + '</div>'
       + '<div class="wp">+' + fmtScore(gained) + '</div>' + explication;
-    const duree = this.montrerPop(pop, false);
+    const duree = this.montrerPop(pop, false, !!Joaillier.zone);
 
     /* Garde de sécurité : si le joueur a quitté l'écran de jeu, relancé
        le niveau, ou déjà avancé par un autre chemin pendant ce court
@@ -10112,6 +10676,7 @@ function androidBack(){
      gèrent eux-mêmes leur bouton retour. Trouvé le 2 oct. par un contrôle
      statique : le banc de test fabrique un élément pour N'IMPORTE QUEL id,
      il ne pouvait donc pas voir qu'un élément manquait. */
+  if (Avent.retour()) return;                     // 1.84 : Avent étoilé
   if (Sceaux.retour()) return;                    // 1.67 : cérémonie, fiche, écrin
   const msg = document.getElementById("ov-msg");
   if (msg.classList.contains("on")){
@@ -10170,6 +10735,48 @@ const SkyManager = {
     this.cv.addEventListener("pointermove", e => this.onMove(e));
     this.cv.addEventListener("pointerup",   e => this.onUp(e));
     this.cv.addEventListener("pointercancel", e => this.onUp(e));
+    /* 1.84 — la souris (Fabien : « corrige le ciel à la molette, c'est important »). */
+    this.cv.addEventListener("wheel", e => this.onWheel(e), { passive:false });
+    this.cv.addEventListener("dblclick", e => {
+      /* Relecture : sur téléphone, Chrome envoie aussi un dblclick après deux tapes → souris seulement. */
+      if (this.transition || this._typeAppui !== "mouse") return;
+      const r = this.cv.getBoundingClientRect();
+      this.zoomVers(e.clientX - r.left, e.clientY - r.top, 2.2);
+    });
+    /* Relecture : Safari (Mac) envoie le pincement du pavé tactile en « gesture », pas en ctrl+molette. */
+    let gS = 1;
+    this.cv.addEventListener("gesturestart", e => { e.preventDefault(); gS = 1; }, { passive:false });
+    this.cv.addEventListener("gesturechange", e => {
+      e.preventDefault(); if (this.transition) return;
+      const r = this.cv.getBoundingClientRect();
+      this.zoomAutour((e.clientX || r.left + this.W / 2) - r.left, (e.clientY || r.top + this.H / 2) - r.top, e.scale / gS); gS = e.scale;
+    }, { passive:false });
+    this.cv.addEventListener("gestureend", e => e.preventDefault(), { passive:false });
+    /* Survol à la souris : main ouverte pour tirer, doigt pointé sur une étoile qu'on peut toucher. */
+    this.cv.addEventListener("pointermove", e => {
+      if (e.pointerType !== "mouse" || this.pointers.size) return;
+      const r = this.cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      const A = this._ancre; if (A && Math.hypot(x - A.x, y - A.y) > 3) this._ancre = null;
+      this._survol = this.etoileSous(x, y);
+      this.majCurseur();
+    });
+    this.cv.addEventListener("pointerleave", () => { this._survol = null; this._ancre = null; this.majCurseur(); });
+    const bz = (id, f) => { const b = document.getElementById(id); if (b) b.addEventListener("click", f); };
+    bz("sky-zin",  ()=> this.zoomVers(this.W / 2, this.H / 2, 1.7));
+    bz("sky-zout", ()=> this.zoomVers(this.W / 2, this.H / 2, 1 / 1.7));
+    bz("sky-zfit", ()=> this.zoomVers(this.W / 2, this.H / 2, (this.minScale || this.view.scale) / this.view.scale));
+    document.addEventListener("keydown", e => {
+      if (!document.getElementById("s-sky").classList.contains("on") || this.transition) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (/^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName || "")) return;
+      if (document.querySelector(".overlay.on")) return;
+      const k = e.key;
+      if (k === "+" || k === "=")      this.zoomVers(this.W / 2, this.H / 2, 1.7);
+      else if (k === "-" || k === "_") this.zoomVers(this.W / 2, this.H / 2, 1 / 1.7);
+      else if (k === "0")              this.zoomVers(this.W / 2, this.H / 2, (this.minScale || this.view.scale) / this.view.scale);
+      else return;
+      e.preventDefault();
+    });
     /* Sur mobile, l'événement `resize` se déclenche souvent AVANT que le
        navigateur ait fini d'ajuster ses dimensions — surtout à la
        rotation de l'écran. Un seul layout() au moment de l'événement
@@ -10255,7 +10862,7 @@ const SkyManager = {
     }catch(e){ return false; }
   },
   etoilesPour(nbNiveauxResolus){
-    return Math.min(SKY_STARS.length, Math.floor(nbNiveauxResolus / SKY_LEVELS_PER_STAR));
+    return Math.min(SKY_STARS.length, Math.floor((nbNiveauxResolus + SKY_LEVELS_PER_STAR - 1) / SKY_LEVELS_PER_STAR));   /* 1.84 : 1re étoile au 1er niveau */
   },
   litCount(){
     /* Signalé par Fabien : une fois le jeu débloqué, tous les niveaux
@@ -10286,6 +10893,7 @@ const SkyManager = {
   estComplet(){ return this.litCount() >= SKY_STARS.length; },
 
   layout(reinitialiserVue = true){
+    this._ancre = null; this._contenir = false;   /* 1.84 */
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     /* Signalé par Fabien avec trois captures : portrait → paysage →
        portrait, le ciel restait complètement vide, jusqu'à taper
@@ -10555,6 +11163,7 @@ const SkyManager = {
       });
       ctx.restore();
     }
+    try { Avent.dessinerCiel(this, ctx); } catch(e){}   /* 1.84 : Hexagone doré de l'Avent complet */
 
     this.points.forEach((p, i)=>{
       /* Révélation en cascade, dans l'ordre des niveaux : le ciel se
@@ -10646,9 +11255,11 @@ const SkyManager = {
        allumée — sinon il révélerait le nom d'une forme que le joueur
        n'a pas encore gagnée. */
     if (this.view.scale > .55){
-      const opaciteNom = Math.min(1, (this.view.scale - .55) / .30);
+      /* 1.84 : seuil rapporté à l'échelle de l'interface (sur grand écran, la vue d'ensemble est déjà « grande »). */
+      const opaciteNom = Math.min(1, (this.view.scale / (window.__zOrdi || 1) - .55) / .30);
       ctx.save();
-      ctx.font = "600 11px ui-monospace, Menlo, Consolas, monospace";
+      const kz = window.__zOrdi || 1;   /* 1.84 : lisible sur grand écran (1 sur téléphone) */
+      ctx.font = "600 " + Math.round(11 * kz) + "px ui-monospace, Menlo, Consolas, monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       const parConstellation = new Map();
@@ -10663,13 +11274,13 @@ const SkyManager = {
       });
       parConstellation.forEach((e, c)=>{
         if (!e.allume) return;
-        const x = (e.minX + e.maxX) / 2, y = e.maxY + 14;
+        const x = (e.minX + e.maxX) / 2, y = e.maxY + 14 * kz;
         if (x < -60 || x > this.W + 60 || y < -20 || y > this.H + 20) return;   // hors écran : rien à dessiner
         const nom = nomConstellation(c.id);
         ctx.globalAlpha = opaciteNom * .55;
         ctx.fillStyle = "#0A1016";
         const larg = ctx.measureText(nom).width;
-        ctx.fillRect(x - larg/2 - 5, y - 2, larg + 10, 15);
+        ctx.fillRect(x - larg/2 - 5 * kz, y - 2 * kz, larg + 10 * kz, 15 * kz);
         ctx.globalAlpha = opaciteNom * .8;
         ctx.fillStyle = "#9FD8C8";
         ctx.fillText(nom, x, y);
@@ -10689,24 +11300,29 @@ const SkyManager = {
          65 en croyant décrocher l'étoile, exactement le malentendu
          signalé par Fabien. L'étiquette dit désormais la vraie
          condition : le nombre de niveaux qu'il a fallu résoudre. */
-      const niveau = (p.idx + 1) * SKY_LEVELS_PER_STAR;
+      const niveau = p.idx * SKY_LEVELS_PER_STAR + 1;   /* 1.84 : étoiles aux niveaux 1, 6, 11… */
       ctx.save();
       Renderer.ring(ctx, sp.x, sp.y, Math.max(15, (p.rayon||0) + 8), 5, p.color, .85);
 
       const duJour = p.idx >= this.nbEtoilesNiveaux();
       const quoi = duJour ? "🧩 " + T("d_btn") + " · " + Daily.dateEtoile(p.idx - this.nbEtoilesNiveaux())
-                          : T("sky_solved").replace("%n", niveau);
+                          : (niveau === 1 && I18N.dict[I18N.lang] && I18N.dict[I18N.lang].sky_solved1 ? T("sky_solved1") : T("sky_solved").replace("%n", niveau));
       const text = p.planete ? p.nom + "   ·   " + quoi : quoi;
-      ctx.font = "600 15px ui-monospace, Menlo, Consolas, monospace";
+      const ke = window.__zOrdi || 1;   /* 1.84 : étiquette à l'échelle de l'interface */
+      ctx.font = "600 " + Math.round(15 * ke) + "px ui-monospace, Menlo, Consolas, monospace";
       ctx.textBaseline = "middle";
       const tw = ctx.measureText(text).width;
-      const padX = 14, padY = 9, boxW = tw + padX*2, boxH = 15 + padY*2;
-      let bx = Math.max(8, Math.min(this.W - boxW - 8, sp.x - boxW/2));
-      let by = sp.y - 34 - (p.rayon||0) - boxH;
-      if (by < 8) by = sp.y + 34 + (p.rayon||0);
+      const padX = 14 * ke, padY = 9 * ke, boxW = tw + padX*2, boxH = 15 * ke + padY*2;
+      /* 1.84 : l'étiquette ne passe pas sous les boutons + − ⤢ (souris). */
+      const zb = document.getElementById("sky-zoom");
+      const zr = zb && zb.offsetParent ? zb.getBoundingClientRect() : null;
+      const reserve = (zr && sp.y > this.H - zr.height - 60) ? zr.width + 16 : 0;
+      let bx = Math.max(8, Math.min(this.W - boxW - 8 - reserve, sp.x - boxW/2));
+      let by = sp.y - 34 * ke - (p.rayon||0) - boxH;
+      if (by < 8) by = sp.y + 34 * ke + (p.rayon||0);
 
       const box = new Path2D();
-      rr(box, bx, by, boxW, boxH, 10);
+      rr(box, bx, by, boxW, boxH, 10 * ke);
       ctx.fillStyle = "rgba(6,11,15,.92)"; ctx.fill(box);
       ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 1; ctx.stroke(box);
 
@@ -10792,9 +11408,93 @@ const SkyManager = {
       dimension, on le CENTRE dans cette dimension au lieu de le coller
       contre un bord. Chaque axe est traité séparément : le ciel peut
       très bien dépasser en largeur tout en tenant en hauteur. */
+  /** 1.84 — zoom autour d'un point de l'écran : ce point du ciel reste sous la souris. */
+  zoomAutour(x, y, facteur){
+    const v = this.view, s0 = v.scale;
+    const s1 = Math.max(this.minScale || .15, Math.min(4, s0 * facteur));
+    if (!(s1 > 0) || Math.abs(s1 - s0) < 1e-6) return;
+    /* Le point du ciel VISÉ est retenu pendant tout le geste (crans de molette rapprochés, zoom animé) :
+       sinon, tant que le ciel tient dans l'écran, le recentrage de borner() le faisait glisser à chaque cran. */
+    /* Relecture : sans limite de temps (un joueur tourne la molette cran par cran) ; l'ancre tombe dès que
+       la souris bouge de plus de 3 px, au moindre appui, au pincement, à layout() et à show(). */
+    const A = this._ancre;
+    let wx, wy;
+    if (A && Math.hypot(x - A.x, y - A.y) <= 3){ wx = A.wx; wy = A.wy; }
+    else { wx = (x - v.ox) / s0; wy = (y - v.oy) / s0; }
+    this._ancre = { x, y, wx, wy };
+    v.ox = x - wx * s1;
+    v.oy = y - wy * s1;
+    v.scale = s1;
+    this._contenir = s1 > (this.minScale || 0) + 1e-6;   /* au ciel entier : de nouveau centré */
+    this.borner(); this.majCurseur(); this.draw(performance.now());
+  },
+  onWheel(e){
+    if (!document.getElementById("s-sky").classList.contains("on")) return;
+    e.preventDefault();   // la page ne défile ni ne zoome, même pendant la plongée (relecture)
+    if (this.transition) return;
+    const r = this.cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    /* Pavé tactile : un glissement à deux doigts (déplacement surtout horizontal, en pixels) DÉPLACE le ciel. */
+    if (!e.ctrlKey && e.deltaMode === 0 && Math.abs(e.deltaX) > Math.abs(e.deltaY) * .5){
+      this.view.ox -= e.deltaX; this.view.oy -= e.deltaY; this._ancre = null;
+      this.borner(); this.majCurseur(); this.draw(performance.now()); return;
+    }
+    let f;
+    if (e.deltaMode !== 0 || Math.abs(e.deltaY) >= 40){
+      /* Molette à crans (souris, en pixels OU en lignes, avec ou sans ctrl) : même pas pour chaque cran,
+         ×1,3 → du ciel entier au zoom maximal en 6 à 11 crans selon l'écran. */
+      const crans = e.deltaMode === 1 ? e.deltaY / 3 : e.deltaMode === 2 ? e.deltaY : e.deltaY / 100;
+      f = Math.pow(1.3, -Math.max(-3, Math.min(3, crans)));
+    } else {
+      /* Petits pas continus : pavé tactile (pincement = ctrl, plus de gain) ou molette libre. */
+      f = Math.exp(-e.deltaY * (e.ctrlKey ? 0.012 : 0.0022));
+    }
+    this.zoomAutour(x, y, f);
+  },
+  /** L'étoile allumée sous un point de l'écran (même rayon de 30 px que le toucher), ou null. */
+  etoileSous(x, y){
+    let hit = null, best = 30;
+    this.points.forEach(p => { if (!p.lit) return; const sp = this.toScreen(p), d = Math.hypot(sp.x - x, sp.y - y); if (d < best){ best = d; hit = p; } });
+    return hit;
+  },
+  /** Zoom animé (240 ms, freinage en fin de course) : double-clic, boutons, clavier. */
+  zoomVers(x, y, facteur){
+    if (this.transition || !(facteur > 0)) return;
+    const debut = performance.now(), D = 240, s0 = this.view.scale, jeton = (this._zoomJeton = (this._zoomJeton || 0) + 1);
+    const pas = t => {
+      if (jeton !== this._zoomJeton) return;          // un nouveau zoom remplace l'ancien
+      if (this.transition || !document.getElementById("s-sky").classList.contains("on")) return;   // relecture
+      const u = Math.min(1, (t - debut) / D), ease = 1 - Math.pow(1 - u, 3);
+      this.zoomAutour(x, y, s0 * Math.pow(facteur, ease) / this.view.scale);
+      if (u < 1) requestAnimationFrame(pas);
+    };
+    requestAnimationFrame(pas);
+  },
+  /** Main ouverte quand le ciel dépasse l'écran (on peut le tirer), main fermée pendant qu'on le tire. */
+  majCurseur(){
+    const b = this.bounds; if (!b || !this.cv) return;
+    const s = this.view.scale;
+    const grand = (b.maxX - b.minX) * s > this.W + 1 || (b.maxY - b.minY) * s > this.H + 1;
+    const c = this.transition ? "" : (this.downInfo && this.downInfo.moved) ? "grabbing"
+            : this._survol ? "pointer" : grand ? "grab" : "";
+    if (this.cv.style.cursor !== c) this.cv.style.cursor = c;
+    /* Boutons grisés aux bornes (relecture). */
+    const zi = document.getElementById("sky-zin"), zo = document.getElementById("sky-zout"), zf = document.getElementById("sky-zfit");
+    const auMin = s <= (this.minScale || 0) + 1e-6, auMax = s >= 4 - 1e-6;
+    if (zi) zi.disabled = auMax;
+    if (zo) zo.disabled = auMin;
+    if (zf) zf.disabled = auMin;
+  },
   borner(){
     if (!this.bounds) return;
     const b = this.bounds, s = this.view.scale;
+    if (this._contenir){
+      const lim = (o, mn, mx, E) => { const m = .2 * E, a = -mn * s, z = E - mx * s;
+        return Math.max(Math.min(a, z) - m, Math.min(Math.max(a, z) + m, o)); };
+      this.view.ox = lim(this.view.ox, b.minX, b.maxX, this.W);
+      this.view.oy = lim(this.view.oy, b.minY, b.maxY, this.H);
+      return;
+    }
     if ((b.maxX - b.minX) * s <= this.W){
       this.view.ox = this.W/2 - (b.minX + b.maxX) / 2 * s;
     } else {
@@ -10809,6 +11509,8 @@ const SkyManager = {
 
   onDown(e){
     if (this.transition) return;   // plongée en cours : un doigt posé ne doit pas la faire dérailler
+    this._typeAppui = e.pointerType; this._ancre = null;   /* 1.84 : souris ou doigt ; tout appui oublie le point visé */
+    if (e.pointerType !== "mouse") this._contenir = false;   /* au doigt : comportement d'origine */
     /* Le rectangle du canevas n'est mesuré qu'une fois, au tout début
        du geste — pas à chaque doigt qui se pose, pas à chaque
        mouvement. Si la page bouge légèrement PENDANT le geste (barre
@@ -10893,6 +11595,7 @@ const SkyManager = {
         this.downInfo.moved = true;
         this.downInfo.x = pos.x; this.downInfo.y = pos.y;
         this.downInfo.panOx = this.view.ox; this.downInfo.panOy = this.view.oy;
+        this.majCurseur();
         return;
       }
       if (this.downInfo.moved){
@@ -10911,6 +11614,7 @@ const SkyManager = {
 
     if (!avaitDeuxDoigts && this.downInfo && !this.downInfo.moved) this.tapAt(this.downInfo.x, this.downInfo.y);
     this.downInfo = null;
+    this.majCurseur();
   },
 
   /** Plongée vers l'étoile avant de lancer son niveau — le basculement
@@ -11519,7 +12223,7 @@ const SkyManager = {
   plongerVers(p){
     if (this.transition) return;                       // déjà en cours : ne pas cumuler
     if (p.idx >= this.nbEtoilesNiveaux()) return;      // étoile d'un Puzzle du jour : rien à rejouer
-    const niveau = (p.idx + 1) * SKY_LEVELS_PER_STAR;
+    const niveau = p.idx * SKY_LEVELS_PER_STAR + 1;   /* 1.84 */
     /* 2800 ms, pas 620 — signalé par Fabien : « beaucoup trop rapide,
        une fraction de seconde ». Une plongée vers une étoile doit se
        vivre, pas se subir : à cette durée on a le temps de voir la
@@ -11577,13 +12281,20 @@ const SkyManager = {
       if (d < best){ best = d; hit = p; }
     });
     if (!hit || !hit.lit){ this.selected = null; this.draw(performance.now()); return; }
-    if (this.selected === hit){ this.plongerVers(hit); return; }
-    this.selected = hit;
+    if (this.selected === hit){
+      /* 1.84 : à la souris, un 2e clic RAPIDE est un double-clic (= zoom), pas une plongée vers le niveau. */
+      if (this._typeAppui === "mouse" && performance.now() - (this._selAt || 0) < 450) return;
+      this.plongerVers(hit); this.majCurseur(); return;
+    }
+    this.selected = hit; this._selAt = performance.now();
     this.draw(performance.now());
   },
 
   show(){
     this.selected = null;
+    /* 1.84 : un zoom animé encore en cours ne continue pas au retour ; le point visé est oublié ; libellés traduits des boutons. */
+    this._zoomJeton = (this._zoomJeton || 0) + 1; this._ancre = null; this._survol = null; this._contenir = false;
+    document.querySelectorAll("#sky-zoom [data-tl]").forEach(b => { const l = T(b.dataset.tl); b.setAttribute("aria-label", l); b.title = l; });
     this.pointers.clear(); this.pinch = null; this.downInfo = null;
     /* La position de vue est recalculée par layout(), plus bas — centrée
        sur la dernière étoile obtenue, pas remise à zéro ici. */
@@ -11613,9 +12324,12 @@ const SkyManager = {
        de jeu (« Un puzzle résolu ne demande rien de plus »), sans aucun
        rapport avec l'exploration d'un ciel. Remplacé par une vraie
        aide, propre à cet écran : ce que le joueur peut y faire. */
-    hint.textContent = T("sky_hint");
+    /* 1.84 : avec une souris, l'aide parle de molette et de glisser (pas de doigts). */
+    hint.dataset.t = (window.matchMedia && matchMedia("(hover:hover) and (pointer:fine)").matches) ? "sky_hint_souris" : "sky_hint";
+    hint.textContent = T(hint.dataset.t);
     UIManager.show("s-sky");
     this.layout();
+    this.majCurseur();
     this.t0 = performance.now();
     if (!lit){
       UIManager.message(T("sky_empty"));
